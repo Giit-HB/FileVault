@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyVault - Your Knowledge Base</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .admin-btn {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .admin-btn:hover {
+            background: #1e3a8a;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .title-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .admin-controls {
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .admin-controls.active {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        .btn-success {
+            background: #10b981;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .folders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .folder-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .folder-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .folder-icon {
+            width: 60px;
+            height: 60px;
+            background: #dbeafe;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .folder-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .folder-count {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .delete-folder-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .admin-mode .delete-folder-btn {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #6b7280;
+        }
+
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+
+        .files-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #dbeafe;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            📚 FileVault
+        </div>
+        <div>
+            <button id="adminBtn" class="admin-btn" onclick="toggleAdmin()">Admin</button>
+            <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none;">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="title-section">
+            <h1>Your Knowledge Base</h1>
+            <p class="subtitle">Access your study materials organized by subject.</p>
+        </div>
+
+        <div id="adminControls" class="admin-controls">
+            <span>🌐 Admin Controls</span>
+            <button class="btn" onclick="showNewSubjectModal()">
+                ➕ New Subject
+            </button>
+            <button class="btn btn-success" onclick="showUploadModal()">
+                📤 Upload File
+            </button>
+        </div>
+
+        <div id="foldersGrid" class="folders-grid">
+            <div class="loading">Loading subjects...</div>
+        </div>
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Admin Login</h2>
+            <input type="password" id="adminPassword" placeholder="Enter admin password">
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeAdminModal()">Cancel</button>
+                <button class="btn" onclick="checkAdminPassword()">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Subject Modal -->
+    <div id="newSubjectModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Create New Subject</h2>
+            <input type="text" id="subjectName" placeholder="Subject name (e.g., Mathematics)">
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeNewSubjectModal()">Cancel</button>
+                <button class="btn" onclick="createSubject()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload File Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Upload File</h2>
+            <select id="folderSelect" style="width:100%; padding:12px; margin-bottom:15px; border:2px solid #e5e7eb; border-radius:8px;">
+                <option value="">Select a subject...</option>
+            </select>
+            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.png">
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeUploadModal()">Cancel</button>
+                <button class="btn" onclick="uploadFile()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://tqhvxgemgwyulrswofvr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaHZ4Z2VtZ3d5dWxyc3dvZnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTM1NTksImV4cCI6MjA3OTcyOTU1OX0.MJM8XRfNfzBM-2ngqVTASCJ3h1CxZ7BKZOCENYYU7W0';
+        const BUCKET_NAME = 'notes';
+        const ADMIN_PASSWORD = 'admin123'; // Change this to your secure password
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let isAdminMode = false;
+        let currentFolders = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFolders();
+        });
+
+        // Admin Functions
+        function toggleAdmin() {
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function checkAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD) {
+                isAdminMode = true;
+                document.getElementById('adminControls').classList.add('active');
+                document.getElementById('adminBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                document.body.classList.add('admin-mode');
+                closeAdminModal();
+                alert('✅ Admin access granted!');
+
+                // Reload folders to show admin buttons
+                loadFolders();
+            } else {
+                alert('❌ Incorrect password!');
+            }
+        }
+
+        function logout() {
+            isAdminMode = false;
+            document.getElementById('adminControls').classList.remove('active');
+            document.getElementById('adminBtn').style.display = 'inline-block';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.body.classList.remove('admin-mode');
+
+            // Reload folders to hide all admin buttons
+            loadFolders();
+        }
+
+        // Load Folders (Subjects) - FIXED
+        async function loadFolders() {
+            try {
+                const { data, error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .list('', {
+                        limit: 100,
+                        offset: 0,
+                    });
+
+                if (error) throw error;
+
+                // Get folders - folders have no 'id', files have 'id'
+                const folders = {};
+                for (const item of data) {
+                    if (item.name && !item.id) {
+                        folders[item.name] = 0;
+                    }
+                }
+
+                // Count files in each folder
+                for (const folderName of Object.keys(folders)) {
+                    try {
+                        const { data: files } = await supabase.storage
+                            .from(BUCKET_NAME)
+                            .list(folderName, {
+                                limit: 100,
+                                offset: 0,
+                            });
+                        if (files) {
+                            folders[folderName] = files.filter(f => f.id && f.name !== '.placeholder').length;
+                        }
+                    } catch (err) {
+                        console.error('Error counting files:', err);
+                        folders[folderName] = 0;
+                    }
+                }
+
+                currentFolders = Object.keys(folders);
+                displayFolders(folders);
+                updateFolderSelect();
+            } catch (error) {
+                console.error('Error loading folders:', error);
+                document.getElementById('foldersGrid').innerHTML = 
+                    '<div class="loading">Error loading subjects. Please refresh.</div>';
+            }
+        }
+
+        function displayFolders(folders) {
+            const grid = document.getElementById('foldersGrid');
+            
+            if (Object.keys(folders).length === 0) {
+                grid.innerHTML = '<div class="loading">No subjects yet. Create one to get started!</div>';
+                return;
+            }
+
+            grid.innerHTML = Object.entries(folders).map(([name, count]) => `
+                <div class="folder-card" onclick="openFolder('${name}')">
+                    <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${name}')">🗑️</button>
+                    <div class="folder-icon">📁</div>
+                    <div class="folder-name">${name}</div>
+                    <div class="folder-count">${count} ${count === 1 ? 'Note' : 'Notes'}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateFolderSelect() {
+            const select = document.getElementById('folderSelect');
+            select.innerHTML = '<option value="">Select a subject...</option>' +
+                currentFolders.map(folder => `<option value="${folder}">${folder}</option>`).join('');
+        }
+
+        // Create Subject
+        function showNewSubjectModal() {
+            if (!isAdminMode) {
+                alert('Admin access required!');
+                return;
+            }
+            document.getElementById('newSubjectModal').style.display = 'flex';
+        }
+
+        function closeNewSubjectModal() {
+            document.getElementById('newSubjectModal').style.display = 'none';
+            document.getElementById('subjectName').value = '';
+        }
+
+        async function createSubject() {
+            const name = document.getElementById('subjectName').value.trim();
+            if (!name) {
+                alert('Please enter a subject name');
+                return;
+            }
+
+            try {
+                // Create a placeholder file to create the folder
+                const placeholder = new Blob([''], { type: 'text/plain' });
+                const { error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .upload(`${name}/.placeholder`, placeholder);
+
+                if (error) throw error;
+
+                alert('✅ Subject created successfully!');
+                closeNewSubjectModal();
+                loadFolders();
+            } catch (error) {
+                console.error('Error creating subject:', error);
+                alert('❌ Error creating subject. Please try again.');
+            }
+        }
+
+        // Upload File
+        function showUploadModal() {
+            if (!isAdminMode) {
+                alert('Admin access required!');
+                return;
+            }
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('folderSelect').value = '';
+        }
+
+        async function uploadFile() {
+            const folder = document.getElementById('folderSelect').value;
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!folder || !file) {
+                alert('Please select a subject and a file');
+                return;
+            }
+
+            try {
+                const filePath = `${folder}/${file.name}`;
+                const { error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (error) throw error;
+
+                alert('✅ File uploaded successfully!');
+                closeUploadModal();
+                loadFolders();
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('❌ Error uploading file. File might already exist.');
+            }
+        }
+
+        // Open Folder
+        async function openFolder(folderName) {
+            try {
+                const { data, error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .list(folderName, {
+                        limit: 100,
+                        offset: 0,
+                    });
+
+                if (error) throw error;
+
+                displayFiles(folderName, data.filter(item => item.name !== '.placeholder'));
+            } catch (error) {
+                console.error('Error loading files:', error);
+                alert('Error loading files');
+            }
+        }
+
+        function displayFiles(folderName, files) {
+            const grid = document.getElementById('foldersGrid');
+            
+            const filesHTML = files.length === 0 
+                ? '<div class="loading">No files in this subject yet.</div>'
+                : files.map(file => {
+                    const fileExt = file.name.split('.').pop().toLowerCase();
+                    const icon = getFileIcon(fileExt);
+                    
+                    return `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-icon">${icon}</div>
+                                <span>${file.name}</span>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-small" onclick="downloadFile('${folderName}', '${file.name}')">⬇️ Download</button>
+                                ${isAdminMode ? `<button class="btn btn-small" style="background:#ef4444" onclick="deleteFile('${folderName}', '${file.name}')">🗑️ Delete</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1;">
+                    <button class="btn" onclick="loadFolders()">← Back to Subjects</button>
+                    <h2 style="margin: 20px 0; color: #1f2937;">${folderName}</h2>
+                    <div class="files-list">${filesHTML}</div>
+                </div>
+            `;
+        }
+
+        function getFileIcon(ext) {
+            const icons = {
+                pdf: '📄',
+                doc: '📝',
+                docx: '📝',
+                ppt: '📊',
+                pptx: '📊',
+                txt: '📃',
+                jpg: '🖼️',
+                jpeg: '🖼️',
+                png: '🖼️'
+            };
+            return icons[ext] || '📎';
+        }
+
+        // Download File - FIXED to preserve correct file type
+        async function downloadFile(folder, fileName) {
+            try {
+                const { data, error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .download(`${folder}/${fileName}`);
+
+                if (error) throw error;
+
+                // Create download link with proper blob
+                const url = URL.createObjectURL(data);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // Clean up
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                alert('Error downloading file: ' + error.message);
+            }
+        }
+
+        // Delete File
+        async function deleteFile(folder, fileName) {
+            if (!isAdminMode) return;
+            
+            if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
+
+            try {
+                const { error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove([`${folder}/${fileName}`]);
+
+                if (error) throw error;
+
+                alert('✅ File deleted successfully!');
+                openFolder(folder);
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                alert('❌ Error deleting file');
+            }
+        }
+
+        // Delete Folder
+        async function deleteFolder(folderName) {
+            if (!isAdminMode) return;
+            
+            if (!confirm(`Are you sure you want to delete the entire "${folderName}" subject?`)) return;
+
+            try {
+                // Get all files in folder
+                const { data, error } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .list(folderName);
+
+                if (error) throw error;
+
+                // Delete all files
+                const filesToDelete = data.map(file => `${folderName}/${file.name}`);
+                const { error: deleteError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove(filesToDelete);
+
+                if (deleteError) throw deleteError;
+
+                alert('✅ Subject deleted successfully!');
+                loadFolders();
+            } catch (error) {
+                console.error('Error deleting folder:', error);
+                alert('❌ Error deleting subject');
+            }
+        }
+    </script>
+</body>
+</html>
