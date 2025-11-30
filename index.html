@@ -680,7 +680,15 @@
                 return;
             }
 
-            grid.innerHTML = Object.entries(folders).map(([name, count]) => `
+            // Only show top-level folders (those without / in name)
+            const topLevelFolders = Object.entries(folders).filter(([name]) => !name.includes('/'));
+
+            if (topLevelFolders.length === 0) {
+                grid.innerHTML = '<div class="loading">No folders yet. Create one to get started!</div>';
+                return;
+            }
+
+            grid.innerHTML = topLevelFolders.map(([name, count]) => `
                 <div class="folder-card" onclick="openFolder('${name}')">
                     <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${name}')" title="Rename folder">✏️</button>
                     <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${name}')" title="Delete folder">🗑️</button>
@@ -719,17 +727,28 @@
             }
 
             try {
+                // Create folder path - if inside a folder, create nested folder
+                const folderPath = currentFolder 
+                    ? `${currentFolder}/${name}/.placeholder`
+                    : `${name}/.placeholder`;
+                
                 // Create a placeholder file to create the folder
                 const placeholder = new Blob([''], { type: 'text/plain' });
                 const { error } = await supabase.storage
                     .from(BUCKET_NAME)
-                    .upload(`${name}/.placeholder`, placeholder);
+                    .upload(folderPath, placeholder);
 
                 if (error) throw error;
 
                 alert('✅ Folder created successfully!');
                 closeNewFolderModal();
-                loadFolders();
+                
+                // Reload current view
+                if (currentFolder) {
+                    await openFolder(currentFolder);
+                } else {
+                    loadFolders();
+                }
             } catch (error) {
                 console.error('Error creating folder:', error);
                 alert('❌ Error creating folder. Please try again.');
@@ -890,11 +909,15 @@
 
                 if (error) throw error;
 
-                await displayFiles(folderName, data.filter(item => item.name !== '.placeholder'));
+                // Separate folders and files
+                const folders = data.filter(item => !item.id && item.name !== '.placeholder');
+                const files = data.filter(item => item.id);
+
+                await displayFolderContents(folderName, folders, files);
             } catch (error) {
-                console.error('Error loading files:', error);
-                grid.innerHTML = '<div class="loading">Error loading files. Please try again.</div>';
-                alert('Error loading files');
+                console.error('Error loading folder:', error);
+                grid.innerHTML = '<div class="loading">Error loading folder. Please try again.</div>';
+                alert('Error loading folder');
             }
         }
 
@@ -904,14 +927,9 @@
             return mb.toFixed(2) + ' MB';
         }
 
-        async function displayFiles(folderName, files) {
+        async function displayFolderContents(folderName, folders, files) {
             const grid = document.getElementById('foldersGrid');
             
-            if (files.length === 0) {
-                grid.innerHTML = '<div class="loading">No files in this folder yet.</div>';
-                return;
-            }
-
             // Get file sizes - fetch file info to get size
             const filesWithSizes = await Promise.all(files.map(async (file) => {
                 try {
@@ -929,13 +947,45 @@
                 }
             }));
 
+            // Count files in each subfolder
+            const foldersWithCounts = await Promise.all(folders.map(async (folder) => {
+                try {
+                    const { data: folderFiles } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .list(`${folderName}/${folder.name}`, {
+                            limit: 100,
+                            offset: 0,
+                        });
+                    const count = folderFiles ? folderFiles.filter(f => f.id && f.name !== '.placeholder').length : 0;
+                    return { ...folder, count };
+                } catch (error) {
+                    return { ...folder, count: 0 };
+                }
+            }));
+
+            // Build folders HTML
+            const foldersHTML = foldersWithCounts.map(folder => {
+                const fullPath = `${folderName}/${folder.name}`;
+                return `
+                    <div class="folder-card" onclick="openFolder('${fullPath}')">
+                        <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${fullPath}')" title="Rename folder">✏️</button>
+                        <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${fullPath}')" title="Delete folder">🗑️</button>
+                        <div class="folder-icon">📁</div>
+                        <div class="folder-name">${folder.name}</div>
+                        <div class="folder-count">${folder.count} ${folder.count === 1 ? 'Note' : 'Notes'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Build files HTML
             const filesHTML = filesWithSizes.map(file => {
                 const fileExt = file.name.split('.').pop().toLowerCase();
                 const icon = getFileIcon(fileExt);
                 const fileSize = formatFileSize(file.displaySize || 0);
+                const fileId = file.name.replace(/[^a-zA-Z0-9]/g, '_');
                 
                 return `
-                    <div class="file-item" id="file-item-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">
+                    <div class="file-item" id="file-item-${fileId}">
                         <div class="file-info">
                             <div class="file-icon">${icon}</div>
                             <div>
@@ -944,25 +994,51 @@
                             </div>
                         </div>
                         <div class="file-actions">
-                            <button class="btn btn-small download-btn" onclick="downloadFile('${folderName}', '${file.name}')" id="download-btn-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">⬇️ Download</button>
-                            ${isAdminMode ? `<button class="btn btn-small rename-file-btn" style="background:#3b82f6" onclick="showRenameFileModal('${folderName}', '${file.name}')" id="rename-btn-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">✏️ Rename</button>` : ''}
-                            ${isAdminMode ? `<button class="btn btn-small delete-file-btn" style="background:#ef4444" onclick="deleteFile('${folderName}', '${file.name}')" id="delete-btn-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">🗑️ Delete</button>` : ''}
+                            <button class="btn btn-small download-btn" onclick="downloadFile('${folderName}', '${file.name}')" id="download-btn-${fileId}">⬇️ Download</button>
+                            ${isAdminMode ? `<button class="btn btn-small rename-file-btn" style="background:#3b82f6" onclick="showRenameFileModal('${folderName}', '${file.name}')" id="rename-btn-${fileId}">✏️ Rename</button>` : ''}
+                            ${isAdminMode ? `<button class="btn btn-small delete-file-btn" style="background:#ef4444" onclick="deleteFile('${folderName}', '${file.name}')" id="delete-btn-${fileId}">🗑️ Delete</button>` : ''}
                         </div>
-                        <div class="download-progress" id="download-progress-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">
+                        <div class="download-progress" id="download-progress-${fileId}">
                             <div class="download-progress-bar-container">
-                                <div class="download-progress-bar" id="download-bar-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}"></div>
+                                <div class="download-progress-bar" id="download-bar-${fileId}"></div>
                             </div>
-                            <div class="download-progress-text" id="download-text-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">0%</div>
+                            <div class="download-progress-text" id="download-text-${fileId}">0%</div>
                         </div>
                     </div>
                 `;
             }).join('');
 
+            // Build breadcrumb navigation
+            const pathParts = folderName.split('/');
+            const breadcrumbs = pathParts.map((part, index) => {
+                const pathToPart = pathParts.slice(0, index + 1).join('/');
+                return `<span onclick="openFolder('${pathToPart}')" style="cursor: pointer; color: #3b82f6;">${part}</span>`;
+            }).join(' / ');
+
+            // Determine back button action
+            const parentPath = pathParts.slice(0, -1).join('/');
+            const backAction = parentPath ? `openFolder('${parentPath}')` : 'loadFolders()';
+            const backText = parentPath ? '← Back' : '← Back to Folders';
+
+            if (folders.length === 0 && files.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1;">
+                        <button class="btn" id="backToFoldersBtn" onclick="${backAction}">${backText}</button>
+                        <div style="margin: 20px 0; color: #6b7280; font-size: 14px;">${breadcrumbs}</div>
+                        <h2 style="margin: 20px 0; color: #1f2937;">${pathParts[pathParts.length - 1]}</h2>
+                        <div class="loading">No folders or files in this folder yet.</div>
+                    </div>
+                `;
+                return;
+            }
+
             grid.innerHTML = `
                 <div style="grid-column: 1/-1;">
-                    <button class="btn" id="backToFoldersBtn" onclick="loadFolders()">← Back to Folders</button>
-                    <h2 style="margin: 20px 0; color: #1f2937;">${folderName}</h2>
-                    <div class="files-list">${filesHTML}</div>
+                    <button class="btn" id="backToFoldersBtn" onclick="${backAction}">${backText}</button>
+                    <div style="margin: 20px 0; color: #6b7280; font-size: 14px;">${breadcrumbs}</div>
+                    <h2 style="margin: 20px 0; color: #1f2937;">${pathParts[pathParts.length - 1]}</h2>
+                    ${folders.length > 0 ? `<div class="folders-grid" style="margin-bottom: 30px;">${foldersHTML}</div>` : ''}
+                    ${files.length > 0 ? `<div class="files-list">${filesHTML}</div>` : ''}
                 </div>
             `;
         }
@@ -1093,32 +1169,64 @@
         }
 
         // Delete Folder
-        async function deleteFolder(folderName) {
+        async function deleteFolder(folderPath) {
             if (!isAdminMode) return;
             
+            const folderName = folderPath.split('/').pop();
             if (!confirm(`Are you sure you want to delete the entire "${folderName}" folder?`)) return;
 
             const grid = document.getElementById('foldersGrid');
             grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Deleting folder...</div>';
 
             try {
-                // Get all files in folder
-                const { data, error } = await supabase.storage
-                    .from(BUCKET_NAME)
-                    .list(folderName);
-
-                if (error) throw error;
+                // Get all files in folder (recursively)
+                const allFiles = [];
+                async function getAllFiles(path) {
+                    const { data, error } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .list(path);
+                    if (error) throw error;
+                    
+                    for (const item of data) {
+                        if (item.id) {
+                            // It's a file
+                            allFiles.push(`${path}/${item.name}`);
+                        } else if (item.name !== '.placeholder') {
+                            // It's a subfolder, recurse
+                            await getAllFiles(`${path}/${item.name}`);
+                        }
+                    }
+                }
+                
+                await getAllFiles(folderPath);
 
                 // Delete all files
-                const filesToDelete = data.map(file => `${folderName}/${file.name}`);
-                const { error: deleteError } = await supabase.storage
-                    .from(BUCKET_NAME)
-                    .remove(filesToDelete);
+                if (allFiles.length > 0) {
+                    const { error: deleteError } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .remove(allFiles);
 
-                if (deleteError) throw deleteError;
+                    if (deleteError) throw deleteError;
+                }
 
                 alert('✅ Folder deleted successfully!');
-                loadFolders();
+                
+                // Navigate back to parent or root
+                const pathParts = folderPath.split('/');
+                const parentPath = pathParts.slice(0, -1).join('/');
+                
+                if (currentFolder && currentFolder.startsWith(folderPath)) {
+                    // If we're inside the deleted folder, go to parent
+                    if (parentPath) {
+                        await openFolder(parentPath);
+                    } else {
+                        loadFolders();
+                    }
+                } else if (parentPath) {
+                    await openFolder(parentPath);
+                } else {
+                    loadFolders();
+                }
             } catch (error) {
                 console.error('Error deleting folder:', error);
                 alert('❌ Error deleting folder');
@@ -1126,9 +1234,11 @@
         }
 
         // Rename Functions
-        function showRenameFolderModal(folderName) {
+        function showRenameFolderModal(folderPath) {
             if (!isAdminMode) return;
-            renameContext = { type: 'folder', folder: null, name: folderName };
+            // Extract just the folder name (last part of path)
+            const folderName = folderPath.split('/').pop();
+            renameContext = { type: 'folder', folder: null, name: folderPath };
             document.getElementById('renameModalTitle').textContent = 'Rename Folder';
             document.getElementById('renameInput').value = folderName;
             document.getElementById('renameInput').placeholder = 'Enter new folder name';
@@ -1201,16 +1311,23 @@
             }
         }
 
-        async function renameFolder(oldName, newName) {
-            if (oldName === newName) {
+        async function renameFolder(oldFullPath, newName) {
+            // Handle nested paths - extract parent path and folder name
+            const pathParts = oldFullPath.split('/');
+            const oldFolderName = pathParts[pathParts.length - 1];
+            const parentPath = pathParts.slice(0, -1).join('/');
+            const newFullPath = parentPath ? `${parentPath}/${newName}` : newName;
+
+            if (oldFullPath === newFullPath) {
                 closeRenameModal();
                 return;
             }
 
-            // Check if new folder name already exists
+            // Check if new folder name already exists in parent
+            const checkPath = parentPath || '';
             const { data: existing } = await supabase.storage
                 .from(BUCKET_NAME)
-                .list('', { limit: 100 });
+                .list(checkPath, { limit: 100 });
             
             if (existing && existing.some(item => item.name === newName && !item.id)) {
                 alert('❌ A folder with this name already exists!');
@@ -1221,7 +1338,7 @@
                 // Get all files in the old folder
                 const { data: files, error: listError } = await supabase.storage
                     .from(BUCKET_NAME)
-                    .list(oldName);
+                    .list(oldFullPath);
 
                 if (listError) throw listError;
 
@@ -1229,7 +1346,7 @@
                 const placeholder = new Blob([''], { type: 'text/plain' });
                 await supabase.storage
                     .from(BUCKET_NAME)
-                    .upload(`${newName}/.placeholder`, placeholder);
+                    .upload(`${newFullPath}/.placeholder`, placeholder);
 
                 // Copy all files to new folder
                 for (const file of files) {
@@ -1238,14 +1355,14 @@
                     // Download file from old location
                     const { data: fileData, error: downloadError } = await supabase.storage
                         .from(BUCKET_NAME)
-                        .download(`${oldName}/${file.name}`);
+                        .download(`${oldFullPath}/${file.name}`);
 
                     if (downloadError) throw downloadError;
 
                     // Upload to new location
                     const { error: uploadError } = await supabase.storage
                         .from(BUCKET_NAME)
-                        .upload(`${newName}/${file.name}`, fileData, {
+                        .upload(`${newFullPath}/${file.name}`, fileData, {
                             cacheControl: '3600',
                             upsert: false
                         });
@@ -1254,7 +1371,7 @@
                 }
 
                 // Delete old folder (all files)
-                const filesToDelete = files.map(file => `${oldName}/${file.name}`);
+                const filesToDelete = files.map(file => `${oldFullPath}/${file.name}`);
                 const { error: deleteError } = await supabase.storage
                     .from(BUCKET_NAME)
                     .remove(filesToDelete);
@@ -1262,7 +1379,18 @@
                 if (deleteError) throw deleteError;
 
                 alert('✅ Folder renamed successfully!');
-                loadFolders();
+                
+                // Reload current view
+                if (currentFolder && currentFolder.startsWith(oldFullPath)) {
+                    // If we're inside the renamed folder, navigate to new path
+                    const newCurrentPath = currentFolder.replace(oldFullPath, newFullPath);
+                    await openFolder(newCurrentPath);
+                } else if (parentPath) {
+                    // If we're in a parent folder, reload it
+                    await openFolder(parentPath);
+                } else {
+                    loadFolders();
+                }
             } catch (error) {
                 console.error('Error renaming folder:', error);
                 alert('❌ Error renaming folder: ' + (error.message || 'Unknown error'));
@@ -1338,4 +1466,5 @@
         }
     </script>
 </body>
+</html>
 </html>
