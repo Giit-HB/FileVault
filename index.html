@@ -178,7 +178,23 @@
             display: none;
         }
 
-        .admin-mode .delete-folder-btn {
+        .rename-folder-btn {
+            position: absolute;
+            top: 15px;
+            right: 50px;
+            background: #dbeafe;
+            color: #1e40af;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            font-size: 14px;
+        }
+
+        .admin-mode .delete-folder-btn,
+        .admin-mode .rename-folder-btn {
             display: block;
         }
 
@@ -205,6 +221,30 @@
             border-radius: 12px;
             max-width: 500px;
             width: 90%;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
         }
 
         .modal-title {
@@ -284,6 +324,134 @@
             padding: 40px;
             color: #6b7280;
         }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .file-size {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .btn-loading {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .download-progress {
+            display: none;
+            margin: 10px 0;
+        }
+
+        .download-progress.active {
+            display: block;
+        }
+
+        .download-progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .download-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .download-progress-text {
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .upload-progress {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .upload-progress.active {
+            display: block;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .upload-status {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .upload-status.success {
+            display: block;
+            color: #10b981;
+        }
+
+        .upload-status.error {
+            display: block;
+            color: #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -305,8 +473,8 @@
 
         <div id="adminControls" class="admin-controls">
             <span>🌐 Admin Controls</span>
-            <button class="btn" onclick="showNewSubjectModal()">
-                ➕ New Subject
+            <button class="btn" onclick="showNewFolderModal()">
+                ➕ New Folder
             </button>
             <button class="btn btn-success" onclick="showUploadModal()">
                 📤 Upload File
@@ -314,30 +482,31 @@
         </div>
 
         <div id="foldersGrid" class="folders-grid">
-            <div class="loading">Loading subjects...</div>
+            <div class="loading">Loading folders...</div>
         </div>
     </div>
 
     <!-- Admin Password Modal -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
+            <button class="modal-close" onclick="closeAdminModal()" title="Close">×</button>
             <h2 class="modal-title">Admin Access</h2>
             <input type="password" id="adminPassword" placeholder="Enter password">
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="checkAdminPassword()">Cancel</button>
-                <button class="btn" onclick="closeAdminModal()">Login</button>
+                <button class="btn btn-cancel" onclick="closeAdminModal()">Cancel</button>
+                <button class="btn" onclick="checkAdminPassword()">Login</button>
             </div>
         </div>
     </div>
 
-    <!-- New Subject Modal -->
-    <div id="newSubjectModal" class="modal">
+    <!-- New Folder Modal -->
+    <div id="newFolderModal" class="modal">
         <div class="modal-content">
-            <h2 class="modal-title">Create New Subject</h2>
-            <input type="text" id="subjectName" placeholder="Subject name (e.g., Mathematics)">
+            <h2 class="modal-title">Create New Folder</h2>
+            <input type="text" id="folderName" placeholder="Folder name (e.g., untitled)">
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeNewSubjectModal()">Cancel</button>
-                <button class="btn" onclick="createSubject()">Create</button>
+                <button class="btn btn-cancel" onclick="closeNewFolderModal()">Cancel</button>
+                <button class="btn" onclick="createFolder()">Create</button>
             </div>
         </div>
     </div>
@@ -345,14 +514,35 @@
     <!-- Upload File Modal -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
+            <button class="modal-close" onclick="closeUploadModal()" title="Close">×</button>
             <h2 class="modal-title">Upload File</h2>
             <select id="folderSelect" style="width:100%; padding:12px; margin-bottom:15px; border:2px solid #e5e7eb; border-radius:8px;">
-                <option value="">Select a subject...</option>
+                <option value="">Select a folder...</option>
             </select>
             <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.png">
+            <div id="uploadProgress" class="upload-progress">
+                <div class="progress-bar-container">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <div id="progressText" class="progress-text">0%</div>
+                <div id="uploadStatus" class="upload-status"></div>
+            </div>
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeUploadModal()">Cancel</button>
-                <button class="btn" onclick="uploadFile()">Upload</button>
+                <button class="btn btn-cancel" onclick="closeUploadModal()" id="uploadCancelBtn">Cancel</button>
+                <button class="btn" onclick="uploadFile()" id="uploadBtn">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Modal -->
+    <div id="renameModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeRenameModal()" title="Close">×</button>
+            <h2 class="modal-title" id="renameModalTitle">Rename</h2>
+            <input type="text" id="renameInput" placeholder="Enter new name">
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="closeRenameModal()">Cancel</button>
+                <button class="btn" onclick="confirmRename()">Rename</button>
             </div>
         </div>
     </div>
@@ -370,6 +560,8 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let isAdminMode = false;
         let currentFolders = [];
+        let currentFolder = null; // Track which folder is currently being viewed
+        let renameContext = { type: null, folder: null, name: null }; // Track what we're renaming
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -415,8 +607,19 @@
             loadFolders();
         }
 
-        // Load Folders (Subjects) - FIXED
+        // Load Folders - FIXED
         async function loadFolders() {
+            currentFolder = null; // Reset current folder when going back to home
+            const grid = document.getElementById('foldersGrid');
+            const backBtn = document.getElementById('backToFoldersBtn');
+            
+            // Show loading animation
+            if (backBtn) {
+                backBtn.disabled = true;
+                backBtn.innerHTML = '<span class="loading-spinner"></span>Loading...';
+            }
+            grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading folders...</div>';
+            
             try {
                 const { data, error } = await supabase.storage
                     .from(BUCKET_NAME)
@@ -459,7 +662,13 @@
             } catch (error) {
                 console.error('Error loading folders:', error);
                 document.getElementById('foldersGrid').innerHTML = 
-                    '<div class="loading">Error loading subjects. Please refresh.</div>';
+                    '<div class="loading">Error loading folders. Please refresh.</div>';
+            } finally {
+                const backBtn = document.getElementById('backToFoldersBtn');
+                if (backBtn) {
+                    backBtn.disabled = false;
+                    backBtn.innerHTML = '← Back to Folders';
+                }
             }
         }
 
@@ -467,13 +676,14 @@
             const grid = document.getElementById('foldersGrid');
             
             if (Object.keys(folders).length === 0) {
-                grid.innerHTML = '<div class="loading">No subjects yet. Create one to get started!</div>';
+                grid.innerHTML = '<div class="loading">No folders yet. Create one to get started!</div>';
                 return;
             }
 
             grid.innerHTML = Object.entries(folders).map(([name, count]) => `
                 <div class="folder-card" onclick="openFolder('${name}')">
-                    <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${name}')">🗑️</button>
+                    <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${name}')" title="Rename folder">✏️</button>
+                    <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${name}')" title="Delete folder">🗑️</button>
                     <div class="folder-icon">📁</div>
                     <div class="folder-name">${name}</div>
                     <div class="folder-count">${count} ${count === 1 ? 'Note' : 'Notes'}</div>
@@ -483,28 +693,28 @@
 
         function updateFolderSelect() {
             const select = document.getElementById('folderSelect');
-            select.innerHTML = '<option value="">Select a subject...</option>' +
+            select.innerHTML = '<option value="">Select a folder...</option>' +
                 currentFolders.map(folder => `<option value="${folder}">${folder}</option>`).join('');
         }
 
-        // Create Subject
-        function showNewSubjectModal() {
+        // Create Folder
+        function showNewFolderModal() {
             if (!isAdminMode) {
                 alert('Admin access required!');
                 return;
             }
-            document.getElementById('newSubjectModal').style.display = 'flex';
+            document.getElementById('newFolderModal').style.display = 'flex';
         }
 
-        function closeNewSubjectModal() {
-            document.getElementById('newSubjectModal').style.display = 'none';
-            document.getElementById('subjectName').value = '';
+        function closeNewFolderModal() {
+            document.getElementById('newFolderModal').style.display = 'none';
+            document.getElementById('folderName').value = '';
         }
 
-        async function createSubject() {
-            const name = document.getElementById('subjectName').value.trim();
+        async function createFolder() {
+            const name = document.getElementById('folderName').value.trim();
             if (!name) {
-                alert('Please enter a subject name');
+                alert('Please enter a folder name');
                 return;
             }
 
@@ -517,12 +727,12 @@
 
                 if (error) throw error;
 
-                alert('✅ Subject created successfully!');
-                closeNewSubjectModal();
+                alert('✅ Folder created successfully!');
+                closeNewFolderModal();
                 loadFolders();
             } catch (error) {
-                console.error('Error creating subject:', error);
-                alert('❌ Error creating subject. Please try again.');
+                console.error('Error creating folder:', error);
+                alert('❌ Error creating folder. Please try again.');
             }
         }
 
@@ -532,13 +742,54 @@
                 alert('Admin access required!');
                 return;
             }
+            
+            const folderSelect = document.getElementById('folderSelect');
+            const folderSelectContainer = folderSelect.parentElement;
+            
+            // If viewing a folder, pre-select it and hide the dropdown
+            if (currentFolder) {
+                folderSelect.value = currentFolder;
+                folderSelect.style.display = 'none';
+                // Show the selected folder name as text
+                let folderLabel = folderSelectContainer.querySelector('.selected-folder-label');
+                if (!folderLabel) {
+                    folderLabel = document.createElement('div');
+                    folderLabel.className = 'selected-folder-label';
+                    folderLabel.style.cssText = 'padding: 12px; margin-bottom: 15px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #1f2937; font-size: 14px;';
+                    folderSelectContainer.insertBefore(folderLabel, folderSelect);
+                }
+                folderLabel.textContent = `📁 Uploading to: ${currentFolder}`;
+            } else {
+                // On home page, show dropdown normally
+                folderSelect.style.display = 'block';
+                folderSelect.value = '';
+                const folderLabel = folderSelectContainer.querySelector('.selected-folder-label');
+                if (folderLabel) {
+                    folderLabel.remove();
+                }
+            }
+            
             document.getElementById('uploadModal').style.display = 'flex';
         }
 
         function closeUploadModal() {
             document.getElementById('uploadModal').style.display = 'none';
             document.getElementById('fileInput').value = '';
-            document.getElementById('folderSelect').value = '';
+            const folderSelect = document.getElementById('folderSelect');
+            folderSelect.value = '';
+            folderSelect.style.display = 'block'; // Reset to show dropdown
+            const folderLabel = folderSelect.parentElement.querySelector('.selected-folder-label');
+            if (folderLabel) {
+                folderLabel.remove();
+            }
+            // Reset progress
+            document.getElementById('uploadProgress').classList.remove('active');
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').textContent = '0%';
+            document.getElementById('uploadStatus').classList.remove('success', 'error');
+            document.getElementById('uploadStatus').textContent = '';
+            document.getElementById('uploadBtn').disabled = false;
+            document.getElementById('uploadCancelBtn').disabled = false;
         }
 
         async function uploadFile() {
@@ -547,9 +798,34 @@
             const file = fileInput.files[0];
 
             if (!folder || !file) {
-                alert('Please select a subject and a file');
+                alert('Please select a folder and a file');
                 return;
             }
+
+            // Show progress bar
+            const progressContainer = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const cancelBtn = document.getElementById('uploadCancelBtn');
+
+            progressContainer.classList.add('active');
+            uploadStatus.classList.remove('success', 'error');
+            uploadStatus.textContent = '';
+            uploadBtn.disabled = true;
+            cancelBtn.disabled = true;
+
+            // Simulate progress animation
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = Math.round(progress) + '%';
+                }
+            }, 200);
 
             try {
                 const filePath = `${folder}/${file.name}`;
@@ -560,19 +836,50 @@
                         upsert: false
                     });
 
+                clearInterval(progressInterval);
+
                 if (error) throw error;
 
-                alert('✅ File uploaded successfully!');
-                closeUploadModal();
-                loadFolders();
+                // Complete progress
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                
+                // Show success message
+                setTimeout(() => {
+                    uploadStatus.classList.add('success');
+                    uploadStatus.textContent = '✅ Upload Complete!';
+                    
+                    // Close modal and reload after 1.5 seconds
+                    setTimeout(() => {
+                        closeUploadModal();
+                        // If viewing a folder, refresh that folder; otherwise reload folders
+                        if (currentFolder) {
+                            openFolder(currentFolder);
+                        } else {
+                            loadFolders();
+                        }
+                    }, 1500);
+                }, 500);
+
             } catch (error) {
+                clearInterval(progressInterval);
                 console.error('Error uploading file:', error);
-                alert('❌ Error uploading file. File might already exist.');
+                
+                uploadStatus.classList.add('error');
+                uploadStatus.textContent = '❌ Upload Failed: ' + (error.message || 'File might already exist');
+                uploadBtn.disabled = false;
+                cancelBtn.disabled = false;
             }
         }
 
         // Open Folder
         async function openFolder(folderName) {
+            currentFolder = folderName; // Set current folder
+            const grid = document.getElementById('foldersGrid');
+            
+            // Show loading animation
+            grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading folder...</div>';
+            
             try {
                 const { data, error } = await supabase.storage
                     .from(BUCKET_NAME)
@@ -583,39 +890,77 @@
 
                 if (error) throw error;
 
-                displayFiles(folderName, data.filter(item => item.name !== '.placeholder'));
+                await displayFiles(folderName, data.filter(item => item.name !== '.placeholder'));
             } catch (error) {
                 console.error('Error loading files:', error);
+                grid.innerHTML = '<div class="loading">Error loading files. Please try again.</div>';
                 alert('Error loading files');
             }
         }
 
-        function displayFiles(folderName, files) {
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '0 MB';
+            const mb = bytes / (1024 * 1024);
+            return mb.toFixed(2) + ' MB';
+        }
+
+        async function displayFiles(folderName, files) {
             const grid = document.getElementById('foldersGrid');
             
-            const filesHTML = files.length === 0 
-                ? '<div class="loading">No files in this subject yet.</div>'
-                : files.map(file => {
-                    const fileExt = file.name.split('.').pop().toLowerCase();
-                    const icon = getFileIcon(fileExt);
-                    
-                    return `
-                        <div class="file-item">
-                            <div class="file-info">
-                                <div class="file-icon">${icon}</div>
-                                <span>${file.name}</span>
-                            </div>
-                            <div class="file-actions">
-                                <button class="btn btn-small" onclick="downloadFile('${folderName}', '${file.name}')">⬇️ Download</button>
-                                ${isAdminMode ? `<button class="btn btn-small" style="background:#ef4444" onclick="deleteFile('${folderName}', '${file.name}')">🗑️ Delete</button>` : ''}
+            if (files.length === 0) {
+                grid.innerHTML = '<div class="loading">No files in this folder yet.</div>';
+                return;
+            }
+
+            // Get file sizes - fetch file info to get size
+            const filesWithSizes = await Promise.all(files.map(async (file) => {
+                try {
+                    // Get file info which includes size
+                    const { data: fileData } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .download(`${folderName}/${file.name}`);
+                    return { 
+                        ...file, 
+                        displaySize: fileData ? fileData.size : 0 
+                    };
+                } catch (error) {
+                    // If we can't get size, default to 0
+                    return { ...file, displaySize: 0 };
+                }
+            }));
+
+            const filesHTML = filesWithSizes.map(file => {
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const icon = getFileIcon(fileExt);
+                const fileSize = formatFileSize(file.displaySize || 0);
+                
+                return `
+                    <div class="file-item" id="file-item-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">
+                        <div class="file-info">
+                            <div class="file-icon">${icon}</div>
+                            <div>
+                                <div>${file.name}</div>
+                                <div class="file-size">${fileSize}</div>
                             </div>
                         </div>
-                    `;
-                }).join('');
+                        <div class="file-actions">
+                            <button class="btn btn-small download-btn" onclick="downloadFile('${folderName}', '${file.name}')" id="download-btn-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">⬇️ Download</button>
+                            ${isAdminMode ? `<button class="btn btn-small rename-file-btn" style="background:#3b82f6" onclick="showRenameFileModal('${folderName}', '${file.name}')" id="rename-btn-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">✏️ Rename</button>` : ''}
+                            ${isAdminMode ? `<button class="btn btn-small delete-file-btn" style="background:#ef4444" onclick="deleteFile('${folderName}', '${file.name}')" id="delete-btn-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">🗑️ Delete</button>` : ''}
+                        </div>
+                        <div class="download-progress" id="download-progress-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">
+                            <div class="download-progress-bar-container">
+                                <div class="download-progress-bar" id="download-bar-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}"></div>
+                            </div>
+                            <div class="download-progress-text" id="download-text-${file.name.replace(/[^a-zA-Z0-9]/g, '_')}">0%</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             grid.innerHTML = `
                 <div style="grid-column: 1/-1;">
-                    <button class="btn" onclick="loadFolders()">← Back to Subjects</button>
+                    <button class="btn" id="backToFoldersBtn" onclick="loadFolders()">← Back to Folders</button>
                     <h2 style="margin: 20px 0; color: #1f2937;">${folderName}</h2>
                     <div class="files-list">${filesHTML}</div>
                 </div>
@@ -639,12 +984,44 @@
 
         // Download File - FIXED to preserve correct file type
         async function downloadFile(folder, fileName) {
+            const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
+            const downloadBtn = document.getElementById(`download-btn-${fileId}`);
+            const progressContainer = document.getElementById(`download-progress-${fileId}`);
+            const progressBar = document.getElementById(`download-bar-${fileId}`);
+            const progressText = document.getElementById(`download-text-${fileId}`);
+
+            // Show loading state
+            if (downloadBtn) {
+                downloadBtn.classList.add('btn-loading');
+                downloadBtn.innerHTML = '<span class="loading-spinner"></span>Downloading...';
+            }
+            if (progressContainer) {
+                progressContainer.classList.add('active');
+            }
+
+            // Simulate download progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    if (progressBar) progressBar.style.width = progress + '%';
+                    if (progressText) progressText.textContent = Math.round(progress) + '%';
+                }
+            }, 200);
+
             try {
                 const { data, error } = await supabase.storage
                     .from(BUCKET_NAME)
                     .download(`${folder}/${fileName}`);
 
+                clearInterval(progressInterval);
+
                 if (error) throw error;
+
+                // Complete progress
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressText) progressText.textContent = '100%';
 
                 // Create download link with proper blob
                 const url = URL.createObjectURL(data);
@@ -657,9 +1034,26 @@
                 document.body.removeChild(a);
 
                 // Clean up
-                setTimeout(() => URL.revokeObjectURL(url), 100);
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    if (progressContainer) {
+                        progressContainer.classList.remove('active');
+                        if (progressBar) progressBar.style.width = '0%';
+                        if (progressText) progressText.textContent = '0%';
+                    }
+                    if (downloadBtn) {
+                        downloadBtn.classList.remove('btn-loading');
+                        downloadBtn.innerHTML = '⬇️ Download';
+                    }
+                }, 1000);
             } catch (error) {
+                clearInterval(progressInterval);
                 console.error('Error downloading file:', error);
+                if (progressContainer) progressContainer.classList.remove('active');
+                if (downloadBtn) {
+                    downloadBtn.classList.remove('btn-loading');
+                    downloadBtn.innerHTML = '⬇️ Download';
+                }
                 alert('Error downloading file: ' + error.message);
             }
         }
@@ -670,6 +1064,15 @@
             
             if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
 
+            const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
+            const deleteBtn = document.getElementById(`delete-btn-${fileId}`);
+            
+            // Show loading state
+            if (deleteBtn) {
+                deleteBtn.classList.add('btn-loading');
+                deleteBtn.innerHTML = '<span class="loading-spinner"></span>Deleting...';
+            }
+
             try {
                 const { error } = await supabase.storage
                     .from(BUCKET_NAME)
@@ -678,9 +1081,13 @@
                 if (error) throw error;
 
                 alert('✅ File deleted successfully!');
-                openFolder(folder);
+                await openFolder(folder);
             } catch (error) {
                 console.error('Error deleting file:', error);
+                if (deleteBtn) {
+                    deleteBtn.classList.remove('btn-loading');
+                    deleteBtn.innerHTML = '🗑️ Delete';
+                }
                 alert('❌ Error deleting file');
             }
         }
@@ -689,7 +1096,10 @@
         async function deleteFolder(folderName) {
             if (!isAdminMode) return;
             
-            if (!confirm(`Are you sure you want to delete the entire "${folderName}" subject?`)) return;
+            if (!confirm(`Are you sure you want to delete the entire "${folderName}" folder?`)) return;
+
+            const grid = document.getElementById('foldersGrid');
+            grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Deleting folder...</div>';
 
             try {
                 // Get all files in folder
@@ -707,11 +1117,223 @@
 
                 if (deleteError) throw deleteError;
 
-                alert('✅ Subject deleted successfully!');
+                alert('✅ Folder deleted successfully!');
                 loadFolders();
             } catch (error) {
                 console.error('Error deleting folder:', error);
-                alert('❌ Error deleting subject');
+                alert('❌ Error deleting folder');
+            }
+        }
+
+        // Rename Functions
+        function showRenameFolderModal(folderName) {
+            if (!isAdminMode) return;
+            renameContext = { type: 'folder', folder: null, name: folderName };
+            document.getElementById('renameModalTitle').textContent = 'Rename Folder';
+            document.getElementById('renameInput').value = folderName;
+            document.getElementById('renameInput').placeholder = 'Enter new folder name';
+            document.getElementById('renameModal').style.display = 'flex';
+        }
+
+        function showRenameFileModal(folderName, fileName) {
+            if (!isAdminMode) return;
+            renameContext = { type: 'file', folder: folderName, name: fileName };
+            document.getElementById('renameModalTitle').textContent = 'Rename File';
+            // Show filename without extension for editing
+            const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+            document.getElementById('renameInput').value = nameWithoutExt;
+            document.getElementById('renameInput').placeholder = 'Enter new file name';
+            document.getElementById('renameModal').style.display = 'flex';
+            
+            // Get the rename button for this file and show loading if needed
+            const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
+            const renameBtn = document.getElementById(`rename-btn-${fileId}`);
+            if (renameBtn) {
+                renameBtn.classList.add('btn-loading');
+                renameBtn.innerHTML = '<span class="loading-spinner"></span>Opening...';
+                setTimeout(() => {
+                    if (renameBtn) {
+                        renameBtn.classList.remove('btn-loading');
+                        renameBtn.innerHTML = '✏️ Rename';
+                    }
+                }, 500);
+            }
+        }
+
+        function closeRenameModal() {
+            document.getElementById('renameModal').style.display = 'none';
+            document.getElementById('renameInput').value = '';
+            renameContext = { type: null, folder: null, name: null };
+        }
+
+        async function confirmRename() {
+            if (!isAdminMode) return;
+
+            const newName = document.getElementById('renameInput').value.trim();
+            if (!newName) {
+                alert('Please enter a name');
+                return;
+            }
+
+            const renameBtn = document.querySelector('#renameModal .modal-buttons .btn:last-child');
+            const originalText = renameBtn ? renameBtn.innerHTML : 'Rename';
+            
+            // Show loading state
+            if (renameBtn) {
+                renameBtn.disabled = true;
+                renameBtn.classList.add('btn-loading');
+                renameBtn.innerHTML = '<span class="loading-spinner"></span>Renaming...';
+            }
+
+            try {
+                if (renameContext.type === 'folder') {
+                    await renameFolder(renameContext.name, newName);
+                } else if (renameContext.type === 'file') {
+                    await renameFile(renameContext.folder, renameContext.name, newName);
+                }
+                closeRenameModal();
+            } catch (error) {
+                if (renameBtn) {
+                    renameBtn.disabled = false;
+                    renameBtn.classList.remove('btn-loading');
+                    renameBtn.innerHTML = originalText;
+                }
+            }
+        }
+
+        async function renameFolder(oldName, newName) {
+            if (oldName === newName) {
+                closeRenameModal();
+                return;
+            }
+
+            // Check if new folder name already exists
+            const { data: existing } = await supabase.storage
+                .from(BUCKET_NAME)
+                .list('', { limit: 100 });
+            
+            if (existing && existing.some(item => item.name === newName && !item.id)) {
+                alert('❌ A folder with this name already exists!');
+                throw new Error('Folder name exists');
+            }
+
+            try {
+                // Get all files in the old folder
+                const { data: files, error: listError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .list(oldName);
+
+                if (listError) throw listError;
+
+                // Create new folder with placeholder
+                const placeholder = new Blob([''], { type: 'text/plain' });
+                await supabase.storage
+                    .from(BUCKET_NAME)
+                    .upload(`${newName}/.placeholder`, placeholder);
+
+                // Copy all files to new folder
+                for (const file of files) {
+                    if (file.name === '.placeholder') continue;
+                    
+                    // Download file from old location
+                    const { data: fileData, error: downloadError } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .download(`${oldName}/${file.name}`);
+
+                    if (downloadError) throw downloadError;
+
+                    // Upload to new location
+                    const { error: uploadError } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .upload(`${newName}/${file.name}`, fileData, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+
+                    if (uploadError) throw uploadError;
+                }
+
+                // Delete old folder (all files)
+                const filesToDelete = files.map(file => `${oldName}/${file.name}`);
+                const { error: deleteError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove(filesToDelete);
+
+                if (deleteError) throw deleteError;
+
+                alert('✅ Folder renamed successfully!');
+                loadFolders();
+            } catch (error) {
+                console.error('Error renaming folder:', error);
+                alert('❌ Error renaming folder: ' + (error.message || 'Unknown error'));
+            }
+        }
+
+        async function renameFile(folderName, oldFileName, newName) {
+            // Get file extension
+            const fileExt = oldFileName.substring(oldFileName.lastIndexOf('.')) || '';
+            const newFileName = newName + fileExt;
+
+            if (oldFileName === newFileName) {
+                closeRenameModal();
+                return;
+            }
+
+            const fileId = oldFileName.replace(/[^a-zA-Z0-9]/g, '_');
+            const renameBtn = document.getElementById(`rename-btn-${fileId}`);
+
+            // Show loading state on button
+            if (renameBtn) {
+                renameBtn.classList.add('btn-loading');
+                renameBtn.innerHTML = '<span class="loading-spinner"></span>Renaming...';
+            }
+
+            try {
+                // Download the file
+                const { data: fileData, error: downloadError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .download(`${folderName}/${oldFileName}`);
+
+                if (downloadError) throw downloadError;
+
+                // Upload with new name
+                const { error: uploadError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .upload(`${folderName}/${newFileName}`, fileData, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (uploadError) {
+                    if (uploadError.message.includes('already exists')) {
+                        alert('❌ A file with this name already exists!');
+                    } else {
+                        throw uploadError;
+                    }
+                    if (renameBtn) {
+                        renameBtn.classList.remove('btn-loading');
+                        renameBtn.innerHTML = '✏️ Rename';
+                    }
+                    return;
+                }
+
+                // Delete old file
+                const { error: deleteError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove([`${folderName}/${oldFileName}`]);
+
+                if (deleteError) throw deleteError;
+
+                alert('✅ File renamed successfully!');
+                await openFolder(folderName);
+            } catch (error) {
+                console.error('Error renaming file:', error);
+                if (renameBtn) {
+                    renameBtn.classList.remove('btn-loading');
+                    renameBtn.innerHTML = '✏️ Rename';
+                }
+                alert('❌ Error renaming file: ' + (error.message || 'Unknown error'));
+                throw error; // Re-throw to be caught by confirmRename
             }
         }
     </script>
