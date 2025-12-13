@@ -4,372 +4,224 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FileVault - Explore File Base</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #00c6ff;
-            --secondary: #0072ff;
-            --accent: #7b4397;
-            --dark: #0a0a1a;
-            --darker: #050510;
-            --light: #f0f4ff;
-            --success: #00ff9d;
-            --warning: #ffcc00;
-            --error: #ff4d4d;
-            --card-bg: rgba(255, 255, 255, 0.08);
-            --card-hover: rgba(255, 255, 255, 0.15);
-            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, var(--darker), var(--dark));
-            color: var(--light);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
             padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 10% 20%, rgba(0, 198, 255, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(123, 67, 151, 0.1) 0%, transparent 20%);
-            z-index: -1;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10, 10, 30, 0.7);
+            background: white;
             padding: 20px 30px;
-            border-radius: 16px;
+            border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-
-        /*.header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 198, 255, 0.1), transparent);
-            animation: shine 6s infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }*/
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 15px;
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(0, 198, 255, 0.3);
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
         }
 
-     .admin-btn {
-    background: rgba(10, 10, 30, 0.7);  /* Same as header background */
-    color: rgba(10, 10, 30, 0.7);  /* Same as background - invisible text */
-    border: none;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: default;  /* Default cursor */
-    transition: var(--transition);
-    box-shadow: none;  /* Remove shadow */
-    position: relative;
-    overflow: hidden;
-}
-
-.admin-btn:hover {
-    transform: none;  /* Remove hover effect */
-    box-shadow: none;  /* Remove hover shadow */
-    cursor: pointer;  /* Show pointer on hover */
-}
-
-        .admin-btn:active {
-            transform: translateY(1px);
-        }
-
-        .logout-btn {
-            background: linear-gradient(45deg, var(--error), #ff6b6b);
+        .admin-btn {
+            background: white;
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 50px;
-            cursor: pointer;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 600;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
         }
 
-        .logout-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(255, 77, 77, 0.4);
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
         .title-section {
-            background: rgba(20, 20, 40, 0.7);
-            padding: 40px;
-            border-radius: 16px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .title-section::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 198, 255, 0.05), transparent);
-            animation: shine 8s infinite;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 15px;
-            background: linear-gradient(to right, var(--primary), var(--secondary), var(--success));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 198, 255, 0.2);
+            font-size: 32px;
+            color: #1f2937;
+            margin-bottom: 10px;
         }
 
         .subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.2rem;
-            max-width: 700px;
-            margin: 0 auto;
-            line-height: 1.6;
+            color: #6b7280;
+            font-size: 16px;
         }
 
         .admin-controls {
-    background: rgba(20, 20, 40, 0.7);
-    padding: 25px;
-    border-radius: 16px;
-    margin-bottom: 30px;
-    display: none;  /* Keep only this display: none */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    gap: 20px;
-    /* ... rest of styles ... */
-}
+            background: #eff6ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: none;
+        }
 
         .admin-controls.active {
             display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .admin-controls-left {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
-            flex-wrap: wrap;
         }
 
         .admin-controls-right {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
         }
 
         .storage-info {
-            background: rgba(0, 255, 157, 0.15);
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 16px;
-            color: var(--success);
-            font-weight: 600;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2);
-            border: 1px solid rgba(0, 255, 157, 0.2);
+            gap: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .btn {
-            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            background: #3b82f6;
             color: white;
             border: none;
-            padding: 14px 28px;
-            border-radius: 50px;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(123, 67, 151, 0.3);
-            position: relative;
-            overflow: hidden;
+            gap: 8px;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(123, 67, 151, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
+            background: #2563eb;
         }
 
         .btn-success {
-            background: linear-gradient(45deg, var(--success), #00cc99);
-            box-shadow: 0 4px 15px rgba(0, 255, 157, 0.3);
+            background: #10b981;
         }
 
         .btn-success:hover {
-            box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4);
+            background: #059669;
         }
 
         .folders-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
 
         .folder-card {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             cursor: pointer;
-            transition: var(--transition);
+            transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
         }
 
         .folder-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0, 198, 255, 0.3);
-            background: var(--card-hover);
-        }
-
-        .folder-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         }
 
         .folder-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(123, 67, 151, 0.2));
-            border-radius: 16px;
+            width: 60px;
+            height: 60px;
+            background: #dbeafe;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 32px;
+            margin-bottom: 15px;
         }
 
         .folder-name {
-            font-size: 20px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
         }
 
         .folder-count {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            color: #6b7280;
+            font-size: 14px;
         }
 
-        .delete-folder-btn,
-        .rename-folder-btn {
+        .delete-folder-btn {
             position: absolute;
-            top: 20px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            top: 15px;
+            right: 15px;
+            background: #fee2e2;
+            color: #dc2626;
             border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             cursor: pointer;
             display: none;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 2;
+        }
+
+        .rename-folder-btn {
+            position: absolute;
+            top: 15px;
+            right: 50px;
+            background: #dbeafe;
+            color: #1e40af;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            font-size: 14px;
         }
 
         .admin-mode .delete-folder-btn,
         .admin-mode .rename-folder-btn {
-            display: flex;
-        }
-
-        .rename-folder-btn {
-            right: 70px;
-            background: rgba(30, 100, 255, 0.2);
-            color: var(--primary);
-        }
-
-        .rename-folder-btn:hover {
-            background: rgba(30, 100, 255, 0.3);
-            transform: scale(1.1);
-        }
-
-        .delete-folder-btn {
-            right: 20px;
-            background: rgba(255, 77, 77, 0.2);
-            color: var(--error);
-        }
-
-        .delete-folder-btn:hover {
-            background: rgba(255, 77, 77, 0.3);
-            transform: scale(1.1);
+            display: block;
         }
 
         .modal {
@@ -379,11 +231,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(5, 5, 15, 0.9);
+            background: rgba(0,0,0,0.5);
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(5px);
         }
 
         .modal.active {
@@ -391,126 +242,97 @@
         }
 
         .modal-content {
-            background: rgba(20, 20, 40, 0.95);
-            padding: 40px;
-            border-radius: 16px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
             max-width: 500px;
             width: 90%;
             position: relative;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
         }
 
         .modal-close {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            top: 15px;
+            right: 15px;
+            background: transparent;
             border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            font-size: 24px;
             cursor: pointer;
+            color: #6b7280;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: var(--transition);
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s;
         }
 
         .modal-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            transform: rotate(90deg);
+            background: #f3f4f6;
+            color: #1f2937;
         }
 
         .modal-title {
-            font-size: 24px;
-            margin-bottom: 25px;
-            color: white;
-            text-align: center;
-            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1f2937;
         }
 
         input[type="text"],
         input[type="file"],
         input[type="password"] {
             width: 100%;
-            padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            background: rgba(0, 0, 0, 0.2);
-            color: white;
-            transition: var(--transition);
-        }
-
-        input[type="text"]:focus,
-        input[type="file"]:focus,
-        input[type="password"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 198, 255, 0.2);
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
         }
 
         .modal-buttons {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: flex-end;
-            margin-top: 10px;
         }
 
         .btn-cancel {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: #6b7280;
         }
 
         .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: #4b5563;
         }
 
         .files-list {
-            margin-top: 30px;
+            margin-top: 20px;
         }
 
         .file-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: var(--transition);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
-        }
-
-        .file-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateX(5px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .file-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
 
         .file-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(0, 198, 255, 0.1);
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            background: #dbeafe;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .file-actions {
@@ -519,32 +341,26 @@
         }
 
         .btn-small {
-            padding: 10px 20px;
-            font-size: 14px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            padding: 8px 16px;
+            font-size: 12px;
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: rgba(255, 255, 255, 0.7);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+            color: #6b7280;
         }
 
         .loading-spinner {
             display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(0, 198, 255, 0.3);
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
             border-radius: 50%;
-            border-top-color: var(--primary);
+            border-top-color: #3b82f6;
             animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
         }
 
         @keyframes spin {
@@ -552,20 +368,20 @@
         }
 
         .file-size {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
-            margin-top: 5px;
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 4px;
         }
 
         .btn-loading {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
             pointer-events: none;
         }
 
         .download-progress {
             display: none;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .download-progress.active {
@@ -574,30 +390,30 @@
 
         .download-progress-bar-container {
             width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
             overflow: hidden;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .download-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--success), #00cc99);
-            border-radius: 4px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 3px;
             width: 0%;
             transition: width 0.3s ease;
         }
 
         .download-progress-text {
             text-align: center;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            color: #6b7280;
         }
 
         .upload-progress {
             display: none;
-            margin: 25px 0;
+            margin: 20px 0;
         }
 
         .upload-progress.active {
@@ -606,17 +422,17 @@
 
         .progress-bar-container {
             width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 5px;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 4px;
             width: 0%;
             transition: width 0.3s ease;
             position: relative;
@@ -629,7 +445,7 @@
             left: 0;
             bottom: 0;
             right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             animation: shimmer 1.5s infinite;
         }
 
@@ -641,259 +457,78 @@
         .progress-text {
             text-align: center;
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 8px;
+            color: #6b7280;
+            margin-top: 5px;
         }
 
         .upload-status {
             text-align: center;
             font-size: 16px;
             font-weight: 600;
-            margin-top: 15px;
+            margin-top: 10px;
             display: none;
         }
 
         .upload-status.success {
             display: block;
-            color: var(--success);
+            color: #10b981;
         }
 
         .upload-status.error {
             display: block;
-            color: var(--error);
-        }
-
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 25px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-
-        .breadcrumb span:hover {
-            color: var(--primary);
-            cursor: pointer;
-        }
-
-        .section-title {
-            color: var(--light);
-            font-size: 24px;
-            margin: 25px 0 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .folder-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .folder-card-inner {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(5px);
-        }
-
-        .folder-card-inner:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 198, 255, 0.3);
-            background: var(--card-hover);
-        }
-
-        .folder-card-inner::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-        }
-
-        .folder-icon-inner {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(123, 67, 151, 0.2));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .folder-name-inner {
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            margin-bottom: 8px;
-        }
-
-        .folder-count-inner {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-        }
-
-        /* Responsive design */
-        @media (max-width: 992px) {
-            .folders-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                padding: 20px;
-            }
-            
-            .admin-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .admin-controls-left, 
-            .admin-controls-right {
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-            
-            .subtitle {
-                font-size: 1rem;
-            }
-            
-            .btn {
-                padding: 12px 20px;
-                font-size: 14px;
-            }
-            
-            .modal-content {
-                padding: 30px 20px;
-            }
-            
-            .folder-card {
-                padding: 20px;
-            }
-            
-            .folder-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 30px;
-            }
-            
-            .folder-name {
-                font-size: 18px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .folders-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .file-actions {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .modal-content {
-                padding: 25px 15px;
-            }
-            
-            .modal-buttons {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+            color: #ef4444;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo">
-            <i class="fas fa-lock"></i>
-            <span>FileVault</span>
+            📚 ShareWork
         </div>
         <div>
-            <button id="adminBtn" class="admin-btn" onclick="toggleAdmin()">
-                <i class="fas fa-user-shield"></i> Admin
-            </button>
-            <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none;">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+            <button id="adminBtn" class="admin-btn" onclick="toggleAdmin()">Admin</button>
+            <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none;">Logout</button>
         </div>
     </div>
 
     <div class="container">
         <div class="title-section">
-            <h1>Explore File Base</h1>
-            <p class="subtitle">Securely access and organize file materials with our futuristic vault system. Experience seamless file management and unparalleled security.</p>
+            <h1>FileVault - Explore File Base</h1>
+            <p class="subtitle">Access file materials organized by me. </p>
         </div>
 
         <div id="adminControls" class="admin-controls">
             <div class="admin-controls-left">
                 <span>🌐 Admin Controls</span>
                 <button class="btn" onclick="showNewFolderModal()">
-                    <i class="fas fa-folder-plus"></i> New Folder
+                    ➕ New Folder
                 </button>
                 <button class="btn btn-success" onclick="showUploadModal()">
-                    <i class="fas fa-cloud-upload-alt"></i> Upload File
+                    📤 Upload File
                 </button>
             </div>
             <div class="admin-controls-right">
                 <div id="storageInfo" class="storage-info" style="display: none;">
-                    <i class="fas fa-database"></i>
+                    <span>💾</span>
                     <span id="storageText">Calculating...</span>
                 </div>
             </div>
         </div>
 
         <div id="foldersGrid" class="folders-grid">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <span>Loading folders...</span>
-            </div>
+            <div class="loading">Loading folders...</div>
         </div>
     </div>
 
     <!-- Admin Password Modal -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeAdminModal()" title="Close">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeAdminModal()" title="Close">×</button>
             <h2 class="modal-title">Admin Access</h2>
-            <p style="text-align: center; margin-bottom: 20px; color: rgba(255,255,255,0.7);">Securely access administrative controls</p>
-            <input type="password" id="adminPassword" placeholder="Enter admin password">
+            <input type="password" id="adminPassword" placeholder="Enter password">
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeAdminModal()">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button class="btn" onclick="checkAdminPassword()">
-                    <i class="fas fa-lock"></i> Login
-                </button>
+                <button class="btn btn-cancel" onclick="checkAdminPassword()">Cancel</button>
+                <button class="btn" onclick="closeAdminModal()">Login</button>
             </div>
         </div>
     </div>
@@ -901,18 +536,11 @@
     <!-- New Folder Modal -->
     <div id="newFolderModal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeNewFolderModal()" title="Close">
-                <i class="fas fa-times"></i>
-            </button>
             <h2 class="modal-title">Create New Folder</h2>
             <input type="text" id="folderName" placeholder="Folder name (e.g., untitled)">
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeNewFolderModal()">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button class="btn" onclick="createFolder()">
-                    <i class="fas fa-plus"></i> Create
-                </button>
+                <button class="btn btn-cancel" onclick="closeNewFolderModal()">Cancel</button>
+                <button class="btn" onclick="createFolder()">Create</button>
             </div>
         </div>
     </div>
@@ -920,11 +548,9 @@
     <!-- Upload File Modal -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeUploadModal()" title="Close">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeUploadModal()" title="Close">×</button>
             <h2 class="modal-title">Upload File</h2>
-            <select id="folderSelect" style="width:100%; padding:15px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1); border-radius:12px; background:rgba(0,0,0,0.2); color:white;">
+            <select id="folderSelect" style="width:100%; padding:12px; margin-bottom:15px; border:2px solid #e5e7eb; border-radius:8px;">
                 <option value="">Select a folder...</option>
             </select>
             <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.png">
@@ -936,12 +562,8 @@
                 <div id="uploadStatus" class="upload-status"></div>
             </div>
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeUploadModal()" id="uploadCancelBtn">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button class="btn" onclick="uploadFile()" id="uploadBtn">
-                    <i class="fas fa-upload"></i> Upload
-                </button>
+                <button class="btn btn-cancel" onclick="closeUploadModal()" id="uploadCancelBtn">Cancel</button>
+                <button class="btn" onclick="uploadFile()" id="uploadBtn">Upload</button>
             </div>
         </div>
     </div>
@@ -949,18 +571,12 @@
     <!-- Rename Modal -->
     <div id="renameModal" class="modal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeRenameModal()" title="Close">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="modal-close" onclick="closeRenameModal()" title="Close">×</button>
             <h2 class="modal-title" id="renameModalTitle">Rename</h2>
             <input type="text" id="renameInput" placeholder="Enter new name">
             <div class="modal-buttons">
-                <button class="btn btn-cancel" onclick="closeRenameModal()">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button class="btn" onclick="confirmRename()">
-                    <i class="fas fa-save"></i> Rename
-                </button>
+                <button class="btn btn-cancel" onclick="closeRenameModal()">Cancel</button>
+                <button class="btn" onclick="confirmRename()">Rename</button>
             </div>
         </div>
     </div>
@@ -1129,19 +745,11 @@
                 
                 return `
                     <div class="folder-card" onclick="openFolder('${name}')">
-                        <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${name}')" title="Rename folder">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${name}')" title="Delete folder">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <div class="folder-icon">
-                            <i class="fas fa-folder"></i>
-                        </div>
+                        <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${name}')" title="Rename folder">✏️</button>
+                        <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${name}')" title="Delete folder">🗑️</button>
+                        <div class="folder-icon">📁</div>
                         <div class="folder-name">${name}</div>
-                        <div class="folder-count">
-                            <i class="fas fa-file-alt"></i> ${countText}
-                        </div>
+                        <div class="folder-count">${countText}</div>
                     </div>
                 `;
             }).join('');
@@ -1223,7 +831,7 @@
                 if (!folderLabel) {
                     folderLabel = document.createElement('div');
                     folderLabel.className = 'selected-folder-label';
-                    folderLabel.style.cssText = 'padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: rgba(0,0,0,0.2); color: white; font-size: 16px; text-align: center;';
+                    folderLabel.style.cssText = 'padding: 12px; margin-bottom: 15px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #1f2937; font-size: 14px;';
                     folderSelectContainer.insertBefore(folderLabel, folderSelect);
                 }
                 folderLabel.textContent = `📁 Uploading to: ${currentFolder}`;
@@ -1232,7 +840,7 @@
                 folderSelect.style.display = 'block';
                 folderSelect.value = '';
                 folderSelect.removeAttribute('data-current-folder');
-                const folderLabel = folderSelect.parentElement.querySelector('.selected-folder-label');
+                const folderLabel = folderSelectContainer.querySelector('.selected-folder-label');
                 if (folderLabel) {
                     folderLabel.remove();
                 }
@@ -1442,7 +1050,7 @@
                 
                 // Update display
                 const totalMB = totalSize / (1024 * 1024);
-                storageText.textContent = `${totalMB.toFixed(2)} MB Total`;
+                storageText.textContent = `Total Storage: ${totalMB.toFixed(2)} MB`;
             } catch (error) {
                 console.error('Error calculating storage:', error);
                 storageText.textContent = 'Error calculating storage';
@@ -1502,19 +1110,11 @@
                 
                 return `
                     <div class="folder-card" onclick="openFolder('${fullPath}')">
-                        <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${fullPath}')" title="Rename folder">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${fullPath}')" title="Delete folder">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <div class="folder-icon">
-                            <i class="fas fa-folder"></i>
-                        </div>
+                        <button class="rename-folder-btn" onclick="event.stopPropagation(); showRenameFolderModal('${fullPath}')" title="Rename folder">✏️</button>
+                        <button class="delete-folder-btn" onclick="event.stopPropagation(); deleteFolder('${fullPath}')" title="Delete folder">🗑️</button>
+                        <div class="folder-icon">📁</div>
                         <div class="folder-name">${folder.name}</div>
-                        <div class="folder-count">
-                            <i class="fas fa-file-alt"></i> ${countText}
-                        </div>
+                        <div class="folder-count">${countText}</div>
                     </div>
                 `;
             }).join('');
@@ -1536,10 +1136,10 @@
                             </div>
                         </div>
                         <div class="file-actions">
-                            ${!isAdminMode ? `<button class="btn btn-small view-btn" style="background:#00ff9d" onclick="viewFile('${folderName}', '${file.name}')" id="view-btn-${fileId}">👁️ View</button>` : ''}
+                            ${!isAdminMode ? `<button class="btn btn-small view-btn" style="background:#10b981" onclick="viewFile('${folderName}', '${file.name}')" id="view-btn-${fileId}">👁️ View</button>` : ''}
                             <button class="btn btn-small download-btn" onclick="downloadFile('${folderName}', '${file.name}')" id="download-btn-${fileId}">⬇️ Download</button>
-                            ${isAdminMode ? `<button class="btn btn-small rename-file-btn" style="background:#00c6ff" onclick="showRenameFileModal('${folderName}', '${file.name}')" id="rename-btn-${fileId}">✏️ Rename</button>` : ''}
-                            ${isAdminMode ? `<button class="btn btn-small delete-file-btn" style="background:#ff4d4d" onclick="deleteFile('${folderName}', '${file.name}')" id="delete-btn-${fileId}">🗑️ Delete</button>` : ''}
+                            ${isAdminMode ? `<button class="btn btn-small rename-file-btn" style="background:#3b82f6" onclick="showRenameFileModal('${folderName}', '${file.name}')" id="rename-btn-${fileId}">✏️ Rename</button>` : ''}
+                            ${isAdminMode ? `<button class="btn btn-small delete-file-btn" style="background:#ef4444" onclick="deleteFile('${folderName}', '${file.name}')" id="delete-btn-${fileId}">🗑️ Delete</button>` : ''}
                         </div>
                         <div class="download-progress" id="download-progress-${fileId}">
                             <div class="download-progress-bar-container">
@@ -1555,7 +1155,7 @@
             const pathParts = folderName.split('/');
             const breadcrumbs = pathParts.map((part, index) => {
                 const pathToPart = pathParts.slice(0, index + 1).join('/');
-                return `<span onclick="openFolder('${pathToPart}')" style="cursor: pointer; color: var(--primary);">${part}</span>`;
+                return `<span onclick="openFolder('${pathToPart}')" style="cursor: pointer; color: #3b82f6;">${part}</span>`;
             }).join(' / ');
 
             // Determine back button action
@@ -1567,8 +1167,8 @@
                 grid.innerHTML = `
                     <div style="grid-column: 1/-1;">
                         <button class="btn" id="backToFoldersBtn" onclick="${backAction}">${backText}</button>
-                        <div class="breadcrumb">${breadcrumbs}</div>
-                        <h2 class="section-title">📁 ${pathParts[pathParts.length - 1]}</h2>
+                        <div style="margin: 20px 0; color: #6b7280; font-size: 14px;">${breadcrumbs}</div>
+                        <h2 style="margin: 20px 0; color: #1f2937;">${pathParts[pathParts.length - 1]}</h2>
                         <div class="loading">No folders or files in this folder yet.</div>
                     </div>
                 `;
@@ -1578,9 +1178,9 @@
             grid.innerHTML = `
                 <div style="grid-column: 1/-1;">
                     <button class="btn" id="backToFoldersBtn" onclick="${backAction}">${backText}</button>
-                    <div class="breadcrumb">${breadcrumbs}</div>
-                    <h2 class="section-title">📁 ${pathParts[pathParts.length - 1]}</h2>
-                    ${folders.length > 0 ? `<div class="folder-grid">${foldersHTML}</div>` : ''}
+                    <div style="margin: 20px 0; color: #6b7280; font-size: 14px;">${breadcrumbs}</div>
+                    <h2 style="margin: 20px 0; color: #1f2937;">${pathParts[pathParts.length - 1]}</h2>
+                    ${folders.length > 0 ? `<div class="folders-grid" style="margin-bottom: 30px;">${foldersHTML}</div>` : ''}
                     ${files.length > 0 ? `<div class="files-list">${filesHTML}</div>` : ''}
                 </div>
             `;
@@ -2075,4 +1675,5 @@
         }
     </script>
 </body>
+</html>
 </html>
