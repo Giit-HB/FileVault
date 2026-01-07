@@ -520,7 +520,6 @@
         </div>
     </div>
 
-    <!-- Admin Password Modal -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeAdminModal()" title="Close">×</button>
@@ -533,7 +532,6 @@
         </div>
     </div>
 
-    <!-- New Folder Modal -->
     <div id="newFolderModal" class="modal">
         <div class="modal-content">
             <h2 class="modal-title">Create New Folder</h2>
@@ -545,7 +543,6 @@
         </div>
     </div>
 
-    <!-- Upload File Modal -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeUploadModal()" title="Close">×</button>
@@ -568,7 +565,6 @@
         </div>
     </div>
 
-    <!-- Rename Modal -->
     <div id="renameModal" class="modal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeRenameModal()" title="Close">×</button>
@@ -581,21 +577,24 @@
         </div>
     </div>
 
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
         // Supabase Configuration
         const SUPABASE_URL = 'https://tqhvxgemgwyulrswofvr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxaHZ4Z2VtZ3d5dWxyc3dvZnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTM1NTksImV4cCI6MjA3OTcyOTU1OX0.MJM8XRfNfzBM-2ngqVTASCJ3h1CxZ7BKZOCENYYU7W0';
-        const BUCKET_NAME = 'notes';
-        const ADMIN_PASSWORD = 'admin123'; // Change this to your secure password
+        
+        // IMPORTANT: Must be lowercase 'notes' based on your screenshot
+        const BUCKET_NAME = 'notes'; 
+        const ADMIN_PASSWORD = 'admin123'; 
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // UPDATED: Renamed to supabaseClient to avoid conflict with the library variable
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         let isAdminMode = false;
         let currentFolders = [];
-        let currentFolder = null; // Track which folder is currently being viewed
-        let renameContext = { type: null, folder: null, name: null }; // Track what we're renaming
+        let currentFolder = null; 
+        let renameContext = { type: null, folder: null, name: null }; 
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -648,9 +647,9 @@
             loadFolders();
         }
 
-        // Load Folders - FIXED
+        // Load Folders - USING UPDATED CLIENT
         async function loadFolders() {
-            currentFolder = null; // Reset current folder when going back to home
+            currentFolder = null; 
             const grid = document.getElementById('foldersGrid');
             const backBtn = document.getElementById('backToFoldersBtn');
             
@@ -662,7 +661,8 @@
             grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading folders...</div>';
             
             try {
-                const { data, error } = await supabase.storage
+                // FIXED: using supabaseClient
+                const { data, error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .list('', {
                         limit: 100,
@@ -670,6 +670,12 @@
                     });
 
                 if (error) throw error;
+
+                // If empty or no data
+                if (!data || data.length === 0) {
+                     grid.innerHTML = '<div class="loading">No folders yet. Login as Admin to create one!</div>';
+                     return;
+                }
 
                 // Get folders - folders have no 'id', files have 'id'
                 const folders = {};
@@ -682,7 +688,7 @@
                 // Count folders and files in each folder
                 for (const folderName of Object.keys(folders)) {
                     try {
-                        const { data: items } = await supabase.storage
+                        const { data: items } = await supabaseClient.storage
                             .from(BUCKET_NAME)
                             .list(folderName, {
                                 limit: 100,
@@ -704,8 +710,8 @@
                 updateFolderSelect();
             } catch (error) {
                 console.error('Error loading folders:', error);
-                document.getElementById('foldersGrid').innerHTML = 
-                    '<div class="loading">Error loading folders. Please refresh.</div>';
+                grid.innerHTML = 
+                    `<div class="loading">Error loading folders: ${error.message}</div>`;
             } finally {
                 const backBtn = document.getElementById('backToFoldersBtn');
                 if (backBtn) {
@@ -757,8 +763,10 @@
 
         function updateFolderSelect() {
             const select = document.getElementById('folderSelect');
-            select.innerHTML = '<option value="">Select a folder...</option>' +
-                currentFolders.map(folder => `<option value="${folder}">${folder}</option>`).join('');
+            if (select) {
+                select.innerHTML = '<option value="">Select a folder...</option>' +
+                    currentFolders.map(folder => `<option value="${folder}">${folder}</option>`).join('');
+            }
         }
 
         // Create Folder
@@ -783,14 +791,14 @@
             }
 
             try {
-                // Create folder path - if inside a folder, create nested folder
+                // Create folder path
                 const folderPath = currentFolder 
                     ? `${currentFolder}/${name}/.placeholder`
                     : `${name}/.placeholder`;
                 
-                // Create a placeholder file to create the folder
                 const placeholder = new Blob([''], { type: 'text/plain' });
-                const { error } = await supabase.storage
+                // FIXED: using supabaseClient
+                const { error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .upload(folderPath, placeholder);
 
@@ -807,7 +815,7 @@
                 }
             } catch (error) {
                 console.error('Error creating folder:', error);
-                alert('❌ Error creating folder. Please try again.');
+                alert('❌ Error creating folder: ' + error.message);
             }
         }
 
@@ -821,12 +829,10 @@
             const folderSelect = document.getElementById('folderSelect');
             const folderSelectContainer = folderSelect.parentElement;
             
-            // If viewing a folder, pre-select it and hide the dropdown
             if (currentFolder) {
                 folderSelect.value = currentFolder;
-                folderSelect.setAttribute('data-current-folder', currentFolder); // Store in data attribute as backup
+                folderSelect.setAttribute('data-current-folder', currentFolder);
                 folderSelect.style.display = 'none';
-                // Show the selected folder name as text
                 let folderLabel = folderSelectContainer.querySelector('.selected-folder-label');
                 if (!folderLabel) {
                     folderLabel = document.createElement('div');
@@ -836,7 +842,6 @@
                 }
                 folderLabel.textContent = `📁 Uploading to: ${currentFolder}`;
             } else {
-                // On home page, show dropdown normally
                 folderSelect.style.display = 'block';
                 folderSelect.value = '';
                 folderSelect.removeAttribute('data-current-folder');
@@ -854,12 +859,11 @@
             document.getElementById('fileInput').value = '';
             const folderSelect = document.getElementById('folderSelect');
             folderSelect.value = '';
-            folderSelect.style.display = 'block'; // Reset to show dropdown
+            folderSelect.style.display = 'block'; 
             const folderLabel = folderSelect.parentElement.querySelector('.selected-folder-label');
             if (folderLabel) {
                 folderLabel.remove();
             }
-            // Reset progress
             document.getElementById('uploadProgress').classList.remove('active');
             document.getElementById('progressBar').style.width = '0%';
             document.getElementById('progressText').textContent = '0%';
@@ -875,7 +879,6 @@
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
 
-            // If no folder selected, try to get from data attribute or currentFolder
             if (!folder) {
                 folder = folderSelect.getAttribute('data-current-folder') || currentFolder;
             }
@@ -885,10 +888,8 @@
                 return;
             }
 
-            // Ensure folder path doesn't have leading/trailing slashes
             folder = folder.trim().replace(/^\/+|\/+$/g, '');
 
-            // Show progress bar
             const progressContainer = document.getElementById('uploadProgress');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
@@ -902,7 +903,6 @@
             uploadBtn.disabled = true;
             cancelBtn.disabled = true;
 
-            // Simulate progress animation
             let progress = 0;
             const progressInterval = setInterval(() => {
                 if (progress < 90) {
@@ -914,11 +914,10 @@
             }, 200);
 
             try {
-                // Construct file path - ensure proper format for nested folders
                 const filePath = folder ? `${folder}/${file.name}` : file.name;
-                console.log('Uploading to path:', filePath); // Debug log
                 
-                const { error } = await supabase.storage
+                // FIXED: using supabaseClient
+                const { error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .upload(filePath, file, {
                         cacheControl: '3600',
@@ -929,25 +928,20 @@
 
                 if (error) throw error;
 
-                // Complete progress
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
                 
-                // Show success message
                 setTimeout(() => {
                     uploadStatus.classList.add('success');
                     uploadStatus.textContent = '✅ Upload Complete!';
                     
-                    // Close modal and reload after 1.5 seconds
                     setTimeout(() => {
                         closeUploadModal();
-                        // If viewing a folder, refresh that folder; otherwise reload folders
                         if (currentFolder) {
                             openFolder(currentFolder);
                         } else {
                             loadFolders();
                         }
-                        // Recalculate storage after upload
                         if (isAdminMode) {
                             calculateTotalStorage();
                         }
@@ -967,14 +961,14 @@
 
         // Open Folder
         async function openFolder(folderName) {
-            currentFolder = folderName; // Set current folder
+            currentFolder = folderName; 
             const grid = document.getElementById('foldersGrid');
             
-            // Show loading animation
             grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading folder...</div>';
             
             try {
-                const { data, error } = await supabase.storage
+                // FIXED: using supabaseClient
+                const { data, error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .list(folderName, {
                         limit: 100,
@@ -983,15 +977,13 @@
 
                 if (error) throw error;
 
-                // Separate folders and files
                 const folders = data.filter(item => !item.id && item.name !== '.placeholder');
                 const files = data.filter(item => item.id);
 
                 await displayFolderContents(folderName, folders, files);
             } catch (error) {
                 console.error('Error loading folder:', error);
-                grid.innerHTML = '<div class="loading">Error loading folder. Please try again.</div>';
-                alert('Error loading folder');
+                grid.innerHTML = `<div class="loading">Error loading folder: ${error.message}</div>`;
             }
         }
 
@@ -1011,9 +1003,9 @@
             try {
                 let totalSize = 0;
                 
-                // Recursively get all files from all folders
                 async function getAllFiles(path = '') {
-                    const { data, error } = await supabase.storage
+                    // FIXED: using supabaseClient
+                    const { data, error } = await supabaseClient.storage
                         .from(BUCKET_NAME)
                         .list(path, {
                             limit: 1000,
@@ -1028,18 +1020,17 @@
                             // It's a file - get its size
                             try {
                                 const filePath = path ? `${path}/${item.name}` : item.name;
-                                const { data: fileData } = await supabase.storage
+                                // FIXED: using supabaseClient
+                                const { data: fileData } = await supabaseClient.storage
                                     .from(BUCKET_NAME)
                                     .download(filePath);
                                 if (fileData) {
                                     totalSize += fileData.size;
                                 }
                             } catch (err) {
-                                // Skip files we can't access
                                 console.warn('Could not get size for:', item.name);
                             }
                         } else if (item.name !== '.placeholder') {
-                            // It's a folder - recurse
                             const folderPath = path ? `${path}/${item.name}` : item.name;
                             await getAllFiles(folderPath);
                         }
@@ -1048,7 +1039,6 @@
                 
                 await getAllFiles();
                 
-                // Update display
                 const totalMB = totalSize / (1024 * 1024);
                 storageText.textContent = `Total Storage: ${totalMB.toFixed(2)} MB`;
             } catch (error) {
@@ -1060,11 +1050,10 @@
         async function displayFolderContents(folderName, folders, files) {
             const grid = document.getElementById('foldersGrid');
             
-            // Get file sizes - fetch file info to get size
             const filesWithSizes = await Promise.all(files.map(async (file) => {
                 try {
-                    // Get file info which includes size
-                    const { data: fileData } = await supabase.storage
+                    // FIXED: using supabaseClient
+                    const { data: fileData } = await supabaseClient.storage
                         .from(BUCKET_NAME)
                         .download(`${folderName}/${file.name}`);
                     return { 
@@ -1072,15 +1061,14 @@
                         displaySize: fileData ? fileData.size : 0 
                     };
                 } catch (error) {
-                    // If we can't get size, default to 0
                     return { ...file, displaySize: 0 };
                 }
             }));
 
-            // Count folders and files in each subfolder
             const foldersWithCounts = await Promise.all(folders.map(async (folder) => {
                 try {
-                    const { data: items } = await supabase.storage
+                    // FIXED: using supabaseClient
+                    const { data: items } = await supabaseClient.storage
                         .from(BUCKET_NAME)
                         .list(`${folderName}/${folder.name}`, {
                             limit: 100,
@@ -1158,7 +1146,6 @@
                 return `<span onclick="openFolder('${pathToPart}')" style="cursor: pointer; color: #3b82f6;">${part}</span>`;
             }).join(' / ');
 
-            // Determine back button action
             const parentPath = pathParts.slice(0, -1).join('/');
             const backAction = parentPath ? `openFolder('${parentPath}')` : 'loadFolders()';
             const backText = parentPath ? '← Back' : '← Back to Folders';
@@ -1201,12 +1188,11 @@
             return icons[ext] || '📎';
         }
 
-        // View File - Open file in new tab
+        // View File
         async function viewFile(folder, fileName) {
             const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
             const viewBtn = document.getElementById(`view-btn-${fileId}`);
             
-            // Show loading state
             if (viewBtn) {
                 viewBtn.classList.add('btn-loading');
                 viewBtn.innerHTML = '<span class="loading-spinner"></span>Opening...';
@@ -1215,31 +1201,28 @@
             try {
                 const filePath = folder ? `${folder}/${fileName}` : fileName;
                 
-                // Try to get public URL from Supabase (if bucket is public)
-                const { data: publicUrlData } = supabase.storage
+                // FIXED: using supabaseClient
+                const { data: publicUrlData } = supabaseClient.storage
                     .from(BUCKET_NAME)
                     .getPublicUrl(filePath);
 
                 if (publicUrlData && publicUrlData.publicUrl) {
-                    // Open public URL in new tab
                     window.open(publicUrlData.publicUrl, '_blank');
                     if (viewBtn) {
                         viewBtn.classList.remove('btn-loading');
                         viewBtn.innerHTML = '👁️ View';
                     }
                 } else {
-                    // Fallback: download file and create blob URL
-                    const { data: fileData, error } = await supabase.storage
+                    // FIXED: using supabaseClient
+                    const { data: fileData, error } = await supabaseClient.storage
                         .from(BUCKET_NAME)
                         .download(filePath);
 
                     if (error) throw error;
 
-                    // Create blob URL and open in new tab
                     const url = URL.createObjectURL(fileData);
                     window.open(url, '_blank');
                     
-                    // Clean up after a delay
                     setTimeout(() => {
                         URL.revokeObjectURL(url);
                         if (viewBtn) {
@@ -1258,7 +1241,7 @@
             }
         }
 
-        // Download File - FIXED to preserve correct file type
+        // Download File
         async function downloadFile(folder, fileName) {
             const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
             const downloadBtn = document.getElementById(`download-btn-${fileId}`);
@@ -1266,7 +1249,6 @@
             const progressBar = document.getElementById(`download-bar-${fileId}`);
             const progressText = document.getElementById(`download-text-${fileId}`);
 
-            // Show loading state
             if (downloadBtn) {
                 downloadBtn.classList.add('btn-loading');
                 downloadBtn.innerHTML = '<span class="loading-spinner"></span>Downloading...';
@@ -1275,7 +1257,6 @@
                 progressContainer.classList.add('active');
             }
 
-            // Simulate download progress
             let progress = 0;
             const progressInterval = setInterval(() => {
                 if (progress < 90) {
@@ -1287,7 +1268,8 @@
             }, 200);
 
             try {
-                const { data, error } = await supabase.storage
+                // FIXED: using supabaseClient
+                const { data, error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .download(`${folder}/${fileName}`);
 
@@ -1295,11 +1277,9 @@
 
                 if (error) throw error;
 
-                // Complete progress
                 if (progressBar) progressBar.style.width = '100%';
                 if (progressText) progressText.textContent = '100%';
 
-                // Create download link with proper blob
                 const url = URL.createObjectURL(data);
                 const a = document.createElement('a');
                 a.href = url;
@@ -1309,7 +1289,6 @@
                 a.click();
                 document.body.removeChild(a);
 
-                // Clean up
                 setTimeout(() => {
                     URL.revokeObjectURL(url);
                     if (progressContainer) {
@@ -1343,14 +1322,14 @@
             const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
             const deleteBtn = document.getElementById(`delete-btn-${fileId}`);
             
-            // Show loading state
             if (deleteBtn) {
                 deleteBtn.classList.add('btn-loading');
                 deleteBtn.innerHTML = '<span class="loading-spinner"></span>Deleting...';
             }
 
             try {
-                const { error } = await supabase.storage
+                // FIXED: using supabaseClient
+                const { error } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .remove([`${folder}/${fileName}`]);
 
@@ -1358,7 +1337,6 @@
 
                 alert('✅ File deleted successfully!');
                 await openFolder(folder);
-                // Recalculate storage after deletion
                 if (isAdminMode) {
                     calculateTotalStorage();
                 }
@@ -1383,20 +1361,18 @@
             grid.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Deleting folder...</div>';
 
             try {
-                // Get all files in folder (recursively)
                 const allFiles = [];
                 async function getAllFiles(path) {
-                    const { data, error } = await supabase.storage
+                    // FIXED: using supabaseClient
+                    const { data, error } = await supabaseClient.storage
                         .from(BUCKET_NAME)
                         .list(path);
                     if (error) throw error;
                     
                     for (const item of data) {
                         if (item.id) {
-                            // It's a file
                             allFiles.push(`${path}/${item.name}`);
                         } else if (item.name !== '.placeholder') {
-                            // It's a subfolder, recurse
                             await getAllFiles(`${path}/${item.name}`);
                         }
                     }
@@ -1404,9 +1380,9 @@
                 
                 await getAllFiles(folderPath);
 
-                // Delete all files
                 if (allFiles.length > 0) {
-                    const { error: deleteError } = await supabase.storage
+                    // FIXED: using supabaseClient
+                    const { error: deleteError } = await supabaseClient.storage
                         .from(BUCKET_NAME)
                         .remove(allFiles);
 
@@ -1415,12 +1391,10 @@
 
                 alert('✅ Folder deleted successfully!');
                 
-                // Navigate back to parent or root
                 const pathParts = folderPath.split('/');
                 const parentPath = pathParts.slice(0, -1).join('/');
                 
                 if (currentFolder && currentFolder.startsWith(folderPath)) {
-                    // If we're inside the deleted folder, go to parent
                     if (parentPath) {
                         await openFolder(parentPath);
                     } else {
@@ -1432,7 +1406,6 @@
                     loadFolders();
                 }
                 
-                // Recalculate storage after deletion
                 if (isAdminMode) {
                     calculateTotalStorage();
                 }
@@ -1445,7 +1418,6 @@
         // Rename Functions
         function showRenameFolderModal(folderPath) {
             if (!isAdminMode) return;
-            // Extract just the folder name (last part of path)
             const folderName = folderPath.split('/').pop();
             renameContext = { type: 'folder', folder: null, name: folderPath };
             document.getElementById('renameModalTitle').textContent = 'Rename Folder';
@@ -1458,13 +1430,11 @@
             if (!isAdminMode) return;
             renameContext = { type: 'file', folder: folderName, name: fileName };
             document.getElementById('renameModalTitle').textContent = 'Rename File';
-            // Show filename without extension for editing
-            const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
-            document.getElementById('renameInput').value = nameWithoutExt;
-            document.getElementById('renameInput').placeholder = 'Enter new file name';
+            // Show full filename so user can rename including extension if needed
+            document.getElementById('renameInput').value = fileName;
+            document.getElementById('renameInput').placeholder = 'Enter new file name (include extension)';
             document.getElementById('renameModal').style.display = 'flex';
             
-            // Get the rename button for this file and show loading if needed
             const fileId = fileName.replace(/[^a-zA-Z0-9]/g, '_');
             const renameBtn = document.getElementById(`rename-btn-${fileId}`);
             if (renameBtn) {
@@ -1497,7 +1467,6 @@
             const renameBtn = document.querySelector('#renameModal .modal-buttons .btn:last-child');
             const originalText = renameBtn ? renameBtn.innerHTML : 'Rename';
             
-            // Show loading state
             if (renameBtn) {
                 renameBtn.disabled = true;
                 renameBtn.classList.add('btn-loading');
@@ -1517,11 +1486,13 @@
                     renameBtn.classList.remove('btn-loading');
                     renameBtn.innerHTML = originalText;
                 }
+                // Error message should already be shown by renameFolder/renameFile
+                // But if it wasn't, show a generic one
+                console.error('Error in confirmRename:', error);
             }
         }
 
         async function renameFolder(oldFullPath, newName) {
-            // Handle nested paths - extract parent path and folder name
             const pathParts = oldFullPath.split('/');
             const oldFolderName = pathParts[pathParts.length - 1];
             const parentPath = pathParts.slice(0, -1).join('/');
@@ -1532,9 +1503,9 @@
                 return;
             }
 
-            // Check if new folder name already exists in parent
+            // FIXED: using supabaseClient
             const checkPath = parentPath || '';
-            const { data: existing } = await supabase.storage
+            const { data: existing } = await supabaseClient.storage
                 .from(BUCKET_NAME)
                 .list(checkPath, { limit: 100 });
             
@@ -1544,97 +1515,167 @@
             }
 
             try {
-                // Get all files in the old folder
-                const { data: files, error: listError } = await supabase.storage
-                    .from(BUCKET_NAME)
-                    .list(oldFullPath);
-
-                if (listError) throw listError;
-
-                // Create new folder with placeholder
-                const placeholder = new Blob([''], { type: 'text/plain' });
-                await supabase.storage
-                    .from(BUCKET_NAME)
-                    .upload(`${newFullPath}/.placeholder`, placeholder);
-
-                // Copy all files to new folder
-                for (const file of files) {
-                    if (file.name === '.placeholder') continue;
-                    
-                    // Download file from old location
-                    const { data: fileData, error: downloadError } = await supabase.storage
+                // Recursively copy all files and subfolders
+                async function copyFolderContents(oldPath, newPath) {
+                    // FIXED: using supabaseClient
+                    const { data: items, error: listError } = await supabaseClient.storage
                         .from(BUCKET_NAME)
-                        .download(`${oldFullPath}/${file.name}`);
+                        .list(oldPath);
 
-                    if (downloadError) throw downloadError;
+                    if (listError) throw listError;
+                    if (!items) return;
 
-                    // Upload to new location
-                    const { error: uploadError } = await supabase.storage
+                    // Create placeholder for the new folder
+                    const placeholder = new Blob([''], { type: 'text/plain' });
+                    await supabaseClient.storage
                         .from(BUCKET_NAME)
-                        .upload(`${newFullPath}/${file.name}`, fileData, {
-                            cacheControl: '3600',
-                            upsert: false
-                        });
+                        .upload(`${newPath}/.placeholder`, placeholder);
 
-                    if (uploadError) throw uploadError;
+                    // Process each item (files and subfolders)
+                    for (const item of items) {
+                        if (item.name === '.placeholder') continue;
+                        
+                        const oldItemPath = `${oldPath}/${item.name}`;
+                        const newItemPath = `${newPath}/${item.name}`;
+
+                        if (item.id) {
+                            // It's a file - copy it
+                            const { data: fileData, error: downloadError } = await supabaseClient.storage
+                                .from(BUCKET_NAME)
+                                .download(oldItemPath);
+
+                            if (downloadError) throw downloadError;
+
+                            const { error: uploadError } = await supabaseClient.storage
+                                .from(BUCKET_NAME)
+                                .upload(newItemPath, fileData, {
+                                    cacheControl: '3600',
+                                    upsert: false
+                                });
+
+                            if (uploadError) throw uploadError;
+                        } else {
+                            // It's a subfolder - recursively copy it
+                            await copyFolderContents(oldItemPath, newItemPath);
+                        }
+                    }
                 }
 
-                // Delete old folder (all files)
-                const filesToDelete = files.map(file => `${oldFullPath}/${file.name}`);
-                const { error: deleteError } = await supabase.storage
-                    .from(BUCKET_NAME)
-                    .remove(filesToDelete);
+                // Copy all contents from old folder to new folder
+                await copyFolderContents(oldFullPath, newFullPath);
 
-                if (deleteError) throw deleteError;
+                // Delete all files from old folder (including subfolders)
+                async function deleteFolderContents(path) {
+                    const { data: items, error: listError } = await supabaseClient.storage
+                        .from(BUCKET_NAME)
+                        .list(path);
+
+                    if (listError) throw listError;
+                    if (!items) return;
+
+                    const filesToDelete = [];
+                    for (const item of items) {
+                        if (item.id) {
+                            // It's a file
+                            filesToDelete.push(`${path}/${item.name}`);
+                        } else if (item.name !== '.placeholder') {
+                            // It's a subfolder - recursively delete its contents
+                            await deleteFolderContents(`${path}/${item.name}`);
+                        }
+                    }
+
+                    if (filesToDelete.length > 0) {
+                        const { error: deleteError } = await supabaseClient.storage
+                            .from(BUCKET_NAME)
+                            .remove(filesToDelete);
+
+                        if (deleteError) throw deleteError;
+                    }
+                }
+
+                await deleteFolderContents(oldFullPath);
 
                 alert('✅ Folder renamed successfully!');
                 
-                // Reload current view
                 if (currentFolder && currentFolder.startsWith(oldFullPath)) {
-                    // If we're inside the renamed folder, navigate to new path
                     const newCurrentPath = currentFolder.replace(oldFullPath, newFullPath);
                     await openFolder(newCurrentPath);
                 } else if (parentPath) {
-                    // If we're in a parent folder, reload it
                     await openFolder(parentPath);
                 } else {
                     loadFolders();
                 }
             } catch (error) {
                 console.error('Error renaming folder:', error);
-                alert('❌ Error renaming folder: ' + (error.message || 'Unknown error'));
+                // Extract error message more reliably
+                let errorMsg = 'Unknown error';
+                if (error) {
+                    if (typeof error === 'object') {
+                        // Try multiple ways to get the error message
+                        errorMsg = error.message || 
+                                  error.error?.message || 
+                                  error.error || 
+                                  (error.toString && error.toString() !== '[object Object]' ? error.toString() : null) ||
+                                  'Unknown error occurred';
+                    } else {
+                        errorMsg = String(error);
+                    }
+                }
+                alert('❌ Error renaming folder: ' + errorMsg);
+                // Don't re-throw - error is already handled
             }
         }
 
         async function renameFile(folderName, oldFileName, newName) {
-            // Get file extension
-            const fileExt = oldFileName.substring(oldFileName.lastIndexOf('.')) || '';
-            const newFileName = newName + fileExt;
+            // Use the new name directly (user can include extension if they want)
+            const newFileName = newName.trim();
+
+            if (!newFileName) {
+                alert('Please enter a valid file name');
+                return;
+            }
 
             if (oldFileName === newFileName) {
                 closeRenameModal();
                 return;
             }
 
+            // Check if file with new name already exists
+            try {
+                const { data: existingFiles } = await supabaseClient.storage
+                    .from(BUCKET_NAME)
+                    .list(folderName, { limit: 1000 });
+                
+                if (existingFiles && existingFiles.some(item => item.name === newFileName && item.id)) {
+                    alert('❌ A file with this name already exists!');
+                    return;
+                }
+            } catch (checkError) {
+                console.warn('Could not check for existing file:', checkError);
+            }
+
             const fileId = oldFileName.replace(/[^a-zA-Z0-9]/g, '_');
             const renameBtn = document.getElementById(`rename-btn-${fileId}`);
 
-            // Show loading state on button
             if (renameBtn) {
                 renameBtn.classList.add('btn-loading');
                 renameBtn.innerHTML = '<span class="loading-spinner"></span>Renaming...';
             }
 
             try {
-                // Download the file
-                const { data: fileData, error: downloadError } = await supabase.storage
+                // Download the old file
+                const { data: fileData, error: downloadError } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .download(`${folderName}/${oldFileName}`);
 
                 if (downloadError) throw downloadError;
 
+                if (!fileData) {
+                    throw new Error('Could not download file');
+                }
+
                 // Upload with new name
-                const { error: uploadError } = await supabase.storage
+                const { error: uploadError } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .upload(`${folderName}/${newFileName}`, fileData, {
                         cacheControl: '3600',
@@ -1642,7 +1683,7 @@
                     });
 
                 if (uploadError) {
-                    if (uploadError.message.includes('already exists')) {
+                    if (uploadError.message.includes('already exists') || uploadError.message.includes('duplicate')) {
                         alert('❌ A file with this name already exists!');
                     } else {
                         throw uploadError;
@@ -1654,12 +1695,23 @@
                     return;
                 }
 
-                // Delete old file
-                const { error: deleteError } = await supabase.storage
+                // Delete the old file
+                const { error: deleteError } = await supabaseClient.storage
                     .from(BUCKET_NAME)
                     .remove([`${folderName}/${oldFileName}`]);
 
-                if (deleteError) throw deleteError;
+                if (deleteError) {
+                    // If delete fails, try to remove the new file to avoid duplicates
+                    console.error('Error deleting old file:', deleteError);
+                    try {
+                        await supabaseClient.storage
+                            .from(BUCKET_NAME)
+                            .remove([`${folderName}/${newFileName}`]);
+                    } catch (cleanupError) {
+                        console.error('Error cleaning up:', cleanupError);
+                    }
+                    throw deleteError;
+                }
 
                 alert('✅ File renamed successfully!');
                 await openFolder(folderName);
@@ -1669,11 +1721,23 @@
                     renameBtn.classList.remove('btn-loading');
                     renameBtn.innerHTML = '✏️ Rename';
                 }
-                alert('❌ Error renaming file: ' + (error.message || 'Unknown error'));
-                throw error; // Re-throw to be caught by confirmRename
+                // Extract error message more reliably
+                let errorMsg = 'Unknown error';
+                if (error) {
+                    if (typeof error === 'object') {
+                        errorMsg = error.message || 
+                                  error.error?.message || 
+                                  error.error || 
+                                  (error.toString && error.toString() !== '[object Object]' ? error.toString() : null) ||
+                                  'Unknown error occurred';
+                    } else {
+                        errorMsg = String(error);
+                    }
+                }
+                alert('❌ Error renaming file: ' + errorMsg);
+                throw error;
             }
         }
     </script>
 </body>
-</html>
 </html>
